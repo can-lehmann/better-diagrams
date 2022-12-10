@@ -218,6 +218,7 @@ class ClassObject extends DiagramObject {
     super(name)
     this.isAbstract = false
     this.attributes = []
+    this.constructors = []
     this.methods = []
   }
   
@@ -233,9 +234,13 @@ class ClassObject extends DiagramObject {
     this.methods.push(method)
   }
   
+  addConstructor(constr) {
+    this.constructors.push(constr)
+  }
+  
   toBlockSections() {
     const attributes = this.attributes.map(attr => attr.toHtml())
-    const methods = this.methods.map(method => method.toHtml())
+    const methods = [...this.constructors, ...this.methods].map(method => method.toHtml())
     return [
       new BlockSection("left", attributes),
       new BlockSection("left", methods)
@@ -380,6 +385,18 @@ class Method extends ClassMember {
   }
 }
 
+class Constructor extends ClassMember {
+  constructor(visibility, name, args) {
+    super(visibility, name)
+    this.args = args
+  }
+  
+  toHtml() {
+    const args = this.args.map(arg => arg.toHtml()).join(", ")
+    return `${this.visibility} «create» ${this.name}(${args})`
+  }
+}
+
 class Argument {
   constructor(name, type) {
     this.name = name
@@ -489,17 +506,10 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
     })
   }
   
-  parseMethod(methodDeclaration) {
-    const header = methodDeclaration.children.methodHeader[0]
-    const decl = header.children.methodDeclarator[0]
-    const modifiers = methodDeclaration.children.methodModifier ||
-                      methodDeclaration.children.interfaceMethodModifier || []
-    
+  parseArguments(formalParameterList) {
     const args = []
-    
-    const paramList = decl.children.formalParameterList
-    if (paramList) {
-      for (const param of paramList[0].children.formalParameter) {
+    if (formalParameterList) {
+      for (const param of formalParameterList[0].children.formalParameter) {
         const paramDecl = param.children.variableParaRegularParameter[0]
         
         const typeName = this.extractFromSource(paramDecl.children.unannType[0])
@@ -507,8 +517,17 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
         args.push(new Argument(name, typeName))
       }
     }
+    return args
+  }
+  
+  parseMethod(methodDeclaration) {
+    const header = methodDeclaration.children.methodHeader[0]
+    const decl = header.children.methodDeclarator[0]
+    const modifiers = methodDeclaration.children.methodModifier ||
+                      methodDeclaration.children.interfaceMethodModifier || []
     
     const name = decl.children.Identifier[0].image
+    const args = this.parseArguments(decl.children.formalParameterList)
     let result = "void"
     if (header.children.result[0].children.unannType) {
       result = this.extractFromSource(header.children.result[0].children.unannType[0])
@@ -539,7 +558,13 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
           }
         break
         case "constructorDeclaration":
+          const decl = child.children.constructorDeclarator[0]
           
+          const visibility = this.getVisibility(child.children.constructorModifier || [])
+          const name = decl.children.simpleTypeName[0].children.Identifier[0].image
+          const args = this.parseArguments(decl.children.formalParameterList)
+          
+          object.addConstructor(new Constructor(visibility, name, args))
         break
       }
       
