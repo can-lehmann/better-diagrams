@@ -1,5 +1,5 @@
 {
-  "name": "betterdiagrams",
+  "name": "better-diagrams",
   "version": "1.0.0",
   "description": "Generate class diagrams from code",
   "main": "main.mjs",
