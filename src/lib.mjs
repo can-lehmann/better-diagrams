@@ -723,7 +723,7 @@ export function buildPackageTree(diagram) {
   let commonPrefix = null
   for (const [name, object] of diagram.objects.entries()) {
     if (commonPrefix == null) {
-      commonPrefix = object.package
+      commonPrefix = [...object.package]
       continue
     }
     let commonCount = 0
@@ -755,7 +755,7 @@ Diagram.fromJavaProject = function(basePath) {
 
   resolveObjects(diagram)
   inferAssociations(diagram)
-
+  
   return diagram
 }
 
