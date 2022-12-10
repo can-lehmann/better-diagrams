@@ -30,7 +30,7 @@ diagram
   .saveGraphViz("graph.gv")
 ```
 
-![](assets/game_package_tree.png)
+![](assets/game_view_package_tree.png)
 
 A central concept in Better Diagrams is the `View`.
 A `View` is a specific subset of a model.
@@ -42,7 +42,7 @@ diagram
   .saveGraphViz("graph.gv")
 ```
 
-![](assets/game_player.png)
+![](assets/game_view_player.png)
 
 When only showing a single package, we might still want to understand its relationship to other packages.
 The `View.withAdjacent` method allows us to show the context around the current view.
