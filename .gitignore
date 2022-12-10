@@ -1,0 +1,7 @@
+test/
+graph.gv
+graph.svg
+node_modules/
+package-lock.json
+.git-old
+
