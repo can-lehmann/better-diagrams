@@ -18,6 +18,8 @@ diagram
   .saveGraphViz("graph.gv")
 ```
 
+![](assets/game_view_all.png)
+
 If we also want to show the package boundaries, we can use `buildPackageTree` to obtain the package tree for our project.
 
 ```js
@@ -28,25 +30,31 @@ diagram
   .saveGraphViz("graph.gv")
 ```
 
+![](assets/game_package_tree.png)
+
 A central concept in Better Diagrams is the `View`.
 A `View` is a specific subset of a model.
 Here we use views to only show the `game.player` package:
 
 ```js
 diagram
-  .view(packageTree.get(["game", "player"]))
+  .view(packageTree.get(["player"]))
   .saveGraphViz("graph.gv")
 ```
+
+![](assets/game_player.png)
 
 When only showing a single package, we might still want to understand its relationship to other packages.
 The `View.withAdjacent` method allows us to show the context around the current view.
 
 ```js
 diagram
-  .view(packageTree.get(["game", "player"]))
+  .view(packageTree.get(["player"]))
   .withAdjacent()                            // Show context
   .saveGraphViz("graph.gv")
 ```
+
+![](assets/game_view_player_context.png)
 
 ## License
 
