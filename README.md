@@ -3,7 +3,14 @@
 Better Diagrams generates class diagrams from source code.
 It aims to provide a unified model for visualizing object oriented architectures based on source code.
 
-It currently only supports Java.
+It currently Better Diagrams supports the following input languags:
+
+- Java
+- GraphQL
+
+It can generate diagrams in the following formats:
+
+- GraphViz
 
 ## Getting Started
 

@@ -18,6 +18,7 @@
 import path from "path"
 import {parse} from "graphql"
 import {readFileSync} from "fs"
+import {walkTree} from "./../utils.mjs"
 import {resolveObjects, inferAssociations} from "./../passes.mjs"
 import {
   Diagram,
@@ -32,12 +33,14 @@ class GraphQlVisitor {
     this.diagram = diagram
     this.defaultVisibility = "-"
     this.package = []
+    this.ignore = new Set(["Query", "Mutation", "Subscription"])
   }
   
   typeToString(node) {
     switch (node.kind) {
       case "ListType": return `List<${this.typeToString(node.type)}>`
       case "NamedType": return node.name.value
+      case "NonNullType": return this.typeToString(node.type)
       default:
         throw "Unknown type kind: " + node.kind
     }
@@ -74,10 +77,14 @@ class GraphQlVisitor {
   
   document(document) {
     for (const definition of document.definitions) {
+      if (this.ignore.has(definition.name.value)) {
+        continue
+      }
       switch (definition.kind) {
         case "ObjectTypeDefinition": this.objectTypeDef(definition); break
         case "EnumTypeDefinition": this.enumTypeDef(definition); break
         case "InputObjectTypeDefinition": this.inputTypeDef(definition); break
+        case "ScalarTypeDefinition": break
         default:
           throw "Unknown definition kind " + definition.kind
       }
@@ -85,13 +92,27 @@ class GraphQlVisitor {
   }
 }
 
-Diagram.fromGraphQLSchema = function(schemaPath) {
+function loadGraphQL(schemaPath, diagram) {
   const document = parse(readFileSync(schemaPath).toString())
-  const diagram = new Diagram()
-  
   const visitor = new GraphQlVisitor(diagram)
   visitor.package = [path.parse(schemaPath).name]
   visitor.document(document)
+}
+
+Diagram.fromGraphQLSchema = function(schemaPath) {
+  const diagram = new Diagram()
+  loadGraphQL(schemaPath, diagram)
+  inferAssociations(diagram)
+  return diagram
+}
+
+Diagram.fromGraphQLProject = function(basePath) {
+  const diagram = new Diagram()
+  walkTree(basePath, filePath => {
+    if (path.parse(filePath).ext == ".graphql") {
+      loadGraphQL(filePath, diagram)
+    }
+  })
   
   inferAssociations(diagram)
   

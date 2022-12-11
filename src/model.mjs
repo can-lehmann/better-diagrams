@@ -207,9 +207,13 @@ export class PackageObject extends DiagramObject {
     for (const [name, object] of this.objects.entries()) {
       objects.push(object.toGraphViz())
     }
-    return `subgraph ${("cluster" + this.name).escapeGraphViz()} {
+    return `subgraph {
+      cluster=true;
       color=black;
       label=${this.name.escapeGraphViz()};
+      labeljust=l;
+      labelloc="b";
+      fontsize=16;
       ${objects.join("\n")}
     };`
   }
@@ -331,7 +335,8 @@ export class AssociativeRelation extends Relation {
       weight=1,
       label=${this.name.escapeGraphViz()},
       headlabel=${this.roleB.escapeGraphViz()},
-      taillabel=${this.roleA.escapeGraphViz()}
+      taillabel=${this.roleA.escapeGraphViz()},
+      arrowhead=vee
     ];`
   }
 }

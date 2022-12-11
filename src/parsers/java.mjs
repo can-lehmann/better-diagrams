@@ -240,7 +240,7 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
 
 Diagram.fromJavaProject = function(basePath) {
   const diagram = new Diagram()
-    walkTree(basePath, filePath => {
+  walkTree(basePath, filePath => {
     if (path.parse(filePath).ext == ".java") {
       const code = readFileSync(filePath).toString()
       const tree = parse(code)
