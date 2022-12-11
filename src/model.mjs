@@ -23,6 +23,20 @@ export class Diagram {
     this.relations = []
   }
   
+  fuse(other) {
+    for (const [name, object] of other.objects) {
+      if (this.hasObject(name)) {
+        this.getObject(name).fuse(object)
+      } else {
+        this.addObject(object)
+      }
+    }
+    
+    for (const relation of other.relations) {
+      this.addRelation(relation)
+    }
+  }
+  
   addObject(object) {
     if (this.objects.has(object.name)) {
       throw "Multiple objects with the same name"
@@ -49,8 +63,6 @@ export class Diagram {
   view(object) {
     return new View([object], this)
   }
-  
-  
 }
 
 export class DiagramObject {
@@ -60,6 +72,9 @@ export class DiagramObject {
   }
   
   get stereotypes() { return [] }
+  
+  fuse(other) {
+  }
   
   toBlockSections() {
     return []
@@ -100,6 +115,13 @@ export class ClassObject extends DiagramObject {
     return this.isAbstract ? ["abstract"] : []
   }
   
+  fuse(other) {
+    super.fuse(other)
+    this.attributes = [...this.attributes, ...other.attributes]
+    this.constructors = [...this.constructors, ...other.constructors]
+    this.methods = [...this.methods, ...other.methods]
+  }
+  
   addAttribute(attribute) {
     this.attributes.push(attribute)
   }
@@ -130,6 +152,11 @@ export class EnumObject extends ClassObject {
   
   get stereotypes() { return ["enumeration"] }
   
+  fuse(other) {
+    super.fuse(other)
+    this.constants = [...this.constants, ...other.constants]
+  }
+  
   addConstant(constant) {
     this.constants.push(constant)
   }
@@ -148,6 +175,11 @@ export class InterfaceObject extends DiagramObject {
   }
   
   get stereotypes() { return ["interface"] }
+  
+  fuse(other) {
+    super.fuse(other)
+    this.methods = [...this.methods, other.methods]
+  }
   
   addMethod(method) {
     this.methods.push(method)

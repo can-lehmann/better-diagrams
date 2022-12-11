@@ -92,29 +92,44 @@ class GraphQlVisitor {
   }
 }
 
-function loadGraphQL(schemaPath, diagram) {
+const DEFAULT_CONFIG = {
+  associations: true,
+  basePackage: []
+}
+
+function loadGraphQL(schemaPath, diagram, config) {
   const document = parse(readFileSync(schemaPath).toString())
   const visitor = new GraphQlVisitor(diagram)
-  visitor.package = [path.parse(schemaPath).name]
+  visitor.package = [...config.basePackage, path.parse(schemaPath).name]
   visitor.document(document)
 }
 
-Diagram.fromGraphQLSchema = function(schemaPath) {
+Diagram.fromGraphQLSchema = function(schemaPath, partialConfig) {
+  const config = Object.assign({...DEFAULT_CONFIG}, partialConfig || {})
+  
   const diagram = new Diagram()
-  loadGraphQL(schemaPath, diagram)
-  inferAssociations(diagram)
+  loadGraphQL(schemaPath, diagram, config)
+  
+  if (config.associations) {
+    inferAssociations(diagram)
+  }
+  
   return diagram
 }
 
-Diagram.fromGraphQLProject = function(basePath) {
+Diagram.fromGraphQLProject = function(basePath, partialConfig) {
+  const config = Object.assign({...DEFAULT_CONFIG}, partialConfig || {})
+  
   const diagram = new Diagram()
   walkTree(basePath, filePath => {
     if (path.parse(filePath).ext == ".graphql") {
-      loadGraphQL(filePath, diagram)
+      loadGraphQL(filePath, diagram, config)
     }
   })
   
-  inferAssociations(diagram)
+  if (config.associations) {
+    inferAssociations(diagram)
+  }
   
   return diagram
 }

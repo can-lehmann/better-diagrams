@@ -238,7 +238,9 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
   }
 }
 
-Diagram.fromJavaProject = function(basePath) {
+const DEFAULT_CONFIG = {associations: true}
+
+Diagram.fromJavaProject = function(basePath, partialConfig) {
   const diagram = new Diagram()
   walkTree(basePath, filePath => {
     if (path.parse(filePath).ext == ".java") {
@@ -248,9 +250,13 @@ Diagram.fromJavaProject = function(basePath) {
       visitor.visit(tree)
     }
   })
-
+  
   resolveObjects(diagram)
-  inferAssociations(diagram)
+  
+  const config = Object.assign({...DEFAULT_CONFIG}, partialConfig || {})
+  if (config.associations) {
+    inferAssociations(diagram)
+  }
   
   return diagram
 }

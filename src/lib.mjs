@@ -34,10 +34,10 @@
 
 import {Diagram} from "./model.mjs"
 import {View} from "./rendering.mjs"
-import {buildPackageTree} from "./passes.mjs"
+import {buildPackageTree, inferAssociations} from "./passes.mjs"
 
 import "./parsers/java.mjs"
 import "./parsers/graphql.mjs"
 
-export { Diagram, View, buildPackageTree }
+export { Diagram, View, buildPackageTree, inferAssociations }
 
