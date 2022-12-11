@@ -17,14 +17,14 @@
 import path from "path"
 import {readFileSync} from "fs"
 import {parse, BaseJavaCstVisitorWithDefaults} from "java-parser"
-import {walkTree} from "./utils.mjs"
-import {resolveObjects, inferAssociations} from "./passes.mjs"
+import {walkTree} from "./../utils.mjs"
+import {resolveObjects, inferAssociations} from "./../passes.mjs"
 import {
   Diagram,
   ClassObject, EnumObject, InterfaceObject, UnresolvedObject, PackageObject,
   Attribute, Method, Constructor, Argument,
   InheritanceRelation, ImplementsRelation, AssociativeRelation
-} from "./model.mjs"
+} from "./../model.mjs"
 
 class Visitor extends BaseJavaCstVisitorWithDefaults {
   constructor(source, diagram) {

@@ -1,0 +1,27 @@
+type Query {
+  todos: [TodoItem]
+}
+
+type Mutation {
+  addItem(item: TodoItemInput): TodoItem
+  removeItem(id: ID): TodoItem
+  setDone(id: ID, done: Boolean): TodoItem
+}
+
+type TodoItem {
+  id: ID
+  name: String
+  done: Boolean
+  visibility: Visibility
+}
+
+enum Visibility {
+  PUBLIC
+  PRIVATE
+}
+
+input TodoItemInput {
+  name: String
+  visibility: Visibility
+}
+

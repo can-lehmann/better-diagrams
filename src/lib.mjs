@@ -35,10 +35,9 @@
 import {Diagram} from "./model.mjs"
 import {View} from "./rendering.mjs"
 import {buildPackageTree} from "./passes.mjs"
-import "./parse_java.mjs"
+
+import "./parsers/java.mjs"
+import "./parsers/graphql.mjs"
 
 export { Diagram, View, buildPackageTree }
-
-
-
 
