@@ -3,7 +3,7 @@
 Better Diagrams generates class diagrams from source code.
 It aims to provide a unified model for visualizing object oriented architectures based on source code.
 
-It currently Better Diagrams supports the following input languags:
+Better Diagrams currently supports the following input languages:
 
 - Java
 - GraphQL
