@@ -8,9 +8,10 @@ Better Diagrams currently supports the following input languages:
 - Java
 - GraphQL
 
-It can generate diagrams in the following formats:
+It can generate the following formats:
 
-- GraphViz
+- GraphViz: Class Diagrams
+- LaTeX: Class Documentation
 
 ## Getting Started
 

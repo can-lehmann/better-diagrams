@@ -25,6 +25,16 @@ String.prototype.escapeGraphViz = function() {
   return "\"" + this + "\""
 }
 
+Array.prototype.removeCommonPrefix = function(other) {
+  let prefixLength = 0
+  while (prefixLength < this.length &&
+         prefixLength < other.length &&
+         this[prefixLength] == other[prefixLength]) {
+    prefixLength++
+  }
+  return this.slice(prefixLength)
+}
+
 export class BlockNode {
   constructor(sections) {
     this.sections = sections

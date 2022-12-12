@@ -23,7 +23,7 @@ import {resolveObjects, inferAssociations} from "./../passes.mjs"
 import {
   Diagram,
   ClassObject, EnumObject, InterfaceObject, UnresolvedObject, PackageObject,
-  Attribute, Method, Constructor, Argument,
+  Attribute, Method, Constructor, Argument, Constant,
   InheritanceRelation, ImplementsRelation, AssociativeRelation
 } from "./../model.mjs"
 
@@ -64,7 +64,7 @@ class GraphQlVisitor {
   enumTypeDef(definition) {
     const object = new EnumObject(definition.name.value)
     for (const value of definition.values) {
-      object.addConstant(value.name.value)
+      object.addConstant(new Constant(value.name.value))
     }
     object.package = [...this.package]
     this.diagram.addObject(object)

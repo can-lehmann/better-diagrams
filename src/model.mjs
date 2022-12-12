@@ -146,7 +146,7 @@ export class EnumObject extends ClassObject {
   
   toBlockSections() {
     const sections = super.toBlockSections()
-    sections.splice(0, 0, new BlockSection("left", this.constants.map(constant => constant.escapeHtml())))
+    sections.splice(0, 0, new BlockSection("left", this.constants.map(constant => constant.name.escapeHtml())))
     return sections
   }
 }
@@ -282,6 +282,12 @@ export class Argument {
   
   toHtml() {
     return this.name + ":  " + this.type.escapeHtml()
+  }
+}
+
+export class Constant extends ClassMember {
+  constructor(name) {
+    super("", name)
   }
 }
 

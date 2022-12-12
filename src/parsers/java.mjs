@@ -22,7 +22,7 @@ import {resolveObjects, inferAssociations} from "./../passes.mjs"
 import {
   Diagram,
   ClassObject, EnumObject, InterfaceObject, UnresolvedObject, PackageObject,
-  Attribute, Method, Constructor, Argument,
+  Attribute, Method, Constructor, Argument, Constant,
   InheritanceRelation, ImplementsRelation, AssociativeRelation
 } from "./../model.mjs"
 
@@ -153,7 +153,7 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
         if (constantList) {
           const constants = constantList[0].children.enumConstant
           for (const constant of constants) {
-            object.addConstant(constant.children.Identifier[0].image)
+            object.addConstant(new Constant(constant.children.Identifier[0].image))
           }
         }
         
