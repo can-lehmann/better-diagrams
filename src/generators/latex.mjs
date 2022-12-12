@@ -21,7 +21,8 @@ import {
   Diagram, DiagramObject, Relation,
   ClassObject, EnumObject, InterfaceObject, UnresolvedObject, PackageObject,
   ClassMember, Attribute, Method, Constructor, Argument,
-  InheritanceRelation, ImplementsRelation, AssociativeRelation
+  InheritanceRelation, ImplementsRelation, AssociativeRelation,
+  DocComment
 } from "./../model.mjs"
 
 String.prototype.encodeLaTeX = function() {
@@ -50,6 +51,10 @@ Constructor.prototype.toLaTeX = function() {
   return `\\texttt{${this.visibility} «create» ${this.name}(${args.join(", ")})}`
 }
 
+DocComment.prototype.toLaTeX = function() {
+  return this.content.encodeLaTeX()
+}
+
 function membersToLaTeX(name, members) {
   if (members.length == 0) {
     return ""
@@ -57,7 +62,7 @@ function membersToLaTeX(name, members) {
   let section = `\\subsection*{${name}}\n`
   section += "\\begin{enumerate}\n"
   for (const member of members) {
-    section += `  \\item ${member.toLaTeX()}\n`
+    section += `  \\item ${member.toLaTeX()} ${member.doc.toLaTeX()}\n`
   }
   section += "\\end{enumerate}\n"
   return section
@@ -65,13 +70,15 @@ function membersToLaTeX(name, members) {
 
 DiagramObject.prototype.toLaTeX = function(config) {
   const packageName = this.package.removeCommonPrefix(config.packagePrefix).join(".")
-  return `\\subsection{${this.name}\\hfill\\texttt{${packageName}}}\n`
+  let section = `\\subsection{${this.name}\\hfill\\texttt{${packageName}}}\n`
+  section += `${this.doc.toLaTeX()}\n`
+  return section
 }
 
 ClassObject.prototype.toLaTeX = function(config) {
   let section = DiagramObject.prototype.toLaTeX.bind(this)(config)
   section += membersToLaTeX("Attributes", this.attributes)
-  section += membersToLaTeX("Methods", this.methods)
+  section += membersToLaTeX("Methods", [...this.constructors, ...this.methods])
   return section
 }
 

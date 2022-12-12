@@ -69,6 +69,7 @@ export class DiagramObject {
   constructor(name) {
     this.name = name
     this.package = []
+    this.doc = new DocComment()
   }
   
   get stereotypes() { return [] }
@@ -223,6 +224,7 @@ export class ClassMember {
     this.visibility = visibility
     this.name = name
     this.isStatic = false
+    this.doc = new DocComment()
   }
   
   toHtml() {
@@ -325,6 +327,17 @@ export class AssociativeRelation extends Relation {
     this.roleA = ""
     this.roleB = ""
     this.name = ""
+  }
+}
+
+export class DocComment {
+  constructor(content) {
+    this.content = content || ""
+    this.attrs = []
+  }
+  
+  addAttribute(name, params, value) {
+    this.attrs.push({name, params, value})
   }
 }
 

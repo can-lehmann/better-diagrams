@@ -23,7 +23,8 @@ import {
   Diagram,
   ClassObject, EnumObject, InterfaceObject, UnresolvedObject, PackageObject,
   Attribute, Method, Constructor, Argument, Constant,
-  InheritanceRelation, ImplementsRelation, AssociativeRelation
+  InheritanceRelation, ImplementsRelation, AssociativeRelation,
+  DocComment
 } from "./../model.mjs"
 
 class Visitor extends BaseJavaCstVisitorWithDefaults {
@@ -114,11 +115,14 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
           if (child.children.hasOwnProperty("fieldDeclaration")) {
             const fieldDeclaration = child.children.fieldDeclaration[0]
             this.parseAttributes(fieldDeclaration).forEach(attr => {
+              attr.doc = this.parseDocComment(child)
               object.addAttribute(attr)
             })
           } else if (child.children.hasOwnProperty("methodDeclaration")) {
             const methodDeclaration = child.children.methodDeclaration[0]
-            object.addMethod(this.parseMethod(methodDeclaration))
+            const method = this.parseMethod(methodDeclaration)
+            method.doc = this.parseDocComment(child)
+            object.addMethod(method)
           }
         break
         case "constructorDeclaration":
@@ -127,11 +131,72 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
           const visibility = this.getVisibility(child.children.constructorModifier || [])
           const name = decl.children.simpleTypeName[0].children.Identifier[0].image
           const args = this.parseArguments(decl.children.formalParameterList)
-          
-          object.addConstructor(new Constructor(visibility, name, args))
+          const constr = new Constructor(visibility, name, args)
+          constr.doc = this.parseDocComment(child)
+          object.addConstructor(constr)
         break
       }
       
+    }
+  }
+  
+  extractDocComment(node) {
+    let cur = node.location.startOffset - 1
+    while (cur >= 0 && "\n\t\r ".includes(this.source.charAt(cur))) {
+      cur--
+    }
+    
+    if (cur <= 2 || this.source.substr(cur - 1, 2) != "*/") {
+      return ""
+    }
+    const end = cur + 1
+    while (cur >= 0 && this.source.substr(cur, 2) != "/*") {
+      cur--
+    }
+    return this.source.substring(cur, end)
+  }
+  
+  parseDocComment(node) {
+    const comment = this.extractDocComment(node)
+    const lines = comment.split("\n").map(line => line.trim())
+    if (lines[0] != "/**") {
+      return new DocComment("")
+    }
+    
+    const doc = new DocComment("")
+    
+    const content = []
+    let isValid = true
+    for (let line of lines.slice(1)) {
+      if (line == "*/") { continue }
+      if (!line.startsWith("*")) {
+        isValid = false
+        break
+      }
+      line = line.substr(1).trim()
+      if (line.startsWith("@")) {
+        const [name, rest] = line.splitOne(" ")
+        switch(name) {
+          case "@param":
+          case "@throws":
+            const [param, description] = rest.splitOne(" ")
+            doc.addAttribute(name, [param], description)
+          break
+          case "@assoc":
+            doc.addAttribute(name, rest.split(" "), "")
+          break
+          default: doc.addAttribute(name, [], rest)
+        }
+      } else {
+        content.push(line)
+      }
+    }
+    
+    if (isValid) {
+      doc.content = content.join("\n")
+      return doc
+    } else {
+      throw "Invalid doc comment"
     }
   }
   
@@ -153,7 +218,9 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
         if (constantList) {
           const constants = constantList[0].children.enumConstant
           for (const constant of constants) {
-            object.addConstant(new Constant(constant.children.Identifier[0].image))
+            const member = new Constant(constant.children.Identifier[0].image)
+            member.doc = this.parseDocComment(constant)
+            object.addConstant(member)
           }
         }
         
@@ -163,6 +230,7 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
         }
         
         object.package = this.package
+        object.doc = this.parseDocComment((ctx.classModifier || ctx.enumDeclaration)[0])
         this.diagram.addObject(object)
         
         return
@@ -176,6 +244,7 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
       this.parseClassBody(body || [], object)
       
       object.package = this.package
+      object.doc = this.parseDocComment((ctx.classModifier || ctx.normalClassDeclaration)[0])
       this.diagram.addObject(object)
       
       if (decl.superclass) {
@@ -222,6 +291,7 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
       }
       
       object.package = this.package
+      object.doc = this.parseDocComment((ctx.interfaceModifier || ctx.interfaceBody)[0])
       this.diagram.addObject(object)
       
       if (decl.extendsInterfaces) {

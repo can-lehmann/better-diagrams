@@ -25,6 +25,14 @@ String.prototype.escapeGraphViz = function() {
   return "\"" + this + "\""
 }
 
+String.prototype.splitOne = function(delim) {
+  const index = this.indexOf(delim)
+  if (index == -1) {
+    return [this]
+  }
+  return [this.substr(0, index), this.substr(index + 1)]
+}
+
 Array.prototype.removeCommonPrefix = function(other) {
   let prefixLength = 0
   while (prefixLength < this.length &&
