@@ -56,19 +56,70 @@ export function resolveObjects(diagram) {
   }
 }
 
+function parseAssociation(object, diagram, attr) {
+  const MULTIPLICITY = /^(\*|[0-9]+)(\.\.(\*|[0-9]+))?$/
+  const relation = new AssociativeRelation(
+    object,
+    diagram.getObject(attr.params[attr.params.length - 1])
+  )
+  let isStart = true
+  for (let it = 0; it < attr.params.length - 1; it++) {
+    const param = attr.params[it]
+    if (param.includes("-")) {
+      const index = param.indexOf("-")
+      relation.headA = param.charAt(index - 1)
+      relation.headB = param.charAt(index + 1)
+      isStart = false
+    } else {
+      if (MULTIPLICITY.test(param)) {
+        if (isStart) {
+          relation.multiplicityA = param
+        } else {
+          relation.multiplicityB = param
+        }
+      } else {
+        if (isStart) {
+          if (relation.roleA == "") {
+            relation.roleA = param
+          } else {
+            relation.name = param
+          }
+        } else {
+          relation.roleB = param
+        }
+      }
+    }
+  }
+  return relation
+}
+
 export function inferAssociations(diagram) {
   for (const [name, object] of diagram.objects.entries()) {
+    const attr = object.doc.findAttribute("@assoc")
+    if (attr) {
+      diagram.addRelation(parseAssociation(object, diagram, attr))
+    }
+    
+    if (object.doc.findAttribute("@noassoc") != null) {
+      continue
+    }
+    
     if (object instanceof ClassObject) {
       for (const attribute of object.attributes) {
-        const refs = attribute.type.split(/\>|\<|,/).filter(name => name != "")
-        for (const ref of refs) {
-          if (diagram.hasObject(ref)) {
-            const relation = new AssociativeRelation(
-              object,
-              diagram.getObject(ref)
-            )
-            relation.roleB = attribute.name
-            diagram.addRelation(relation)
+        const attr = attribute.doc.findAttribute("@assoc")
+        if (attr) {
+          diagram.addRelation(parseAssociation(object, diagram, attr))
+        } else if (attribute.doc.findAttribute("@noassoc") == null) {
+          const refs = attribute.type.split(/\>|\<|,/).filter(name => name != "")
+          for (const ref of refs) {
+            if (diagram.hasObject(ref)) {
+              const relation = new AssociativeRelation(
+                object,
+                diagram.getObject(ref)
+              )
+              relation.roleB = attribute.name
+              diagram.addRelation(relation)
+            }
           }
         }
       }

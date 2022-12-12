@@ -70,12 +70,28 @@ ImplementsRelation.prototype.toGraphViz = function() {
 }
 
 AssociativeRelation.prototype.toGraphViz = function() {
+  const toArrowType = kind => {
+    switch(kind) {
+      case ">":
+      case "<":
+        return "vee"
+      case "o":
+        return "odiamond"
+      case "*":
+        return "diamond"
+      default:
+        return "none"
+    }
+  }
+  
   return `${this.a.name.escapeGraphViz()} -> ${this.b.name.escapeGraphViz()} [
     weight=1,
     label=${this.name.escapeGraphViz()},
-    headlabel=${this.roleB.escapeGraphViz()},
-    taillabel=${this.roleA.escapeGraphViz()},
-    arrowhead=vee
+    headlabel=${(this.roleB + "\n" + this.multiplicityB).escapeGraphViz()},
+    taillabel=${(this.roleA + "\n" + this.multiplicityA).escapeGraphViz()},
+    arrowtail=${toArrowType(this.headA)},
+    arrowhead=${toArrowType(this.headB)},
+    dir=both
   ];`
 }
 

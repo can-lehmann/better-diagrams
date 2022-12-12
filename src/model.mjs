@@ -324,9 +324,13 @@ export class ImplementsRelation extends Relation {
 export class AssociativeRelation extends Relation {
   constructor(a, b) {
     super(a, b)
+    this.name = ""
     this.roleA = ""
     this.roleB = ""
-    this.name = ""
+    this.headA = ""
+    this.headB = ">"
+    this.multiplicityA = ""
+    this.multiplicityB = ""
   }
 }
 
@@ -338,6 +342,10 @@ export class DocComment {
   
   addAttribute(name, params, value) {
     this.attrs.push({name, params, value})
+  }
+  
+  findAttribute(name) {
+    return this.attrs.find(attr => name == attr.name) || null
   }
 }
 

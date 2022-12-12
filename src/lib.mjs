@@ -19,14 +19,8 @@
 /*
  * Todo List:
  * - Private classes
- * - Constructors
- * - AssociativeRelation
- *   - Aggregation/Compositon
- *   - Number of Items
  *
  * Large Tasks:
- * - Preserve Doc Comments
- * - GraphQL Import
  * - TypeScript Import
  * - PlantUML Export
  * - Interactive positioning
