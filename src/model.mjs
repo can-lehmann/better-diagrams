@@ -83,23 +83,6 @@ export class DiagramObject {
   collectObjects() {
     return new Set([this])
   }
-  
-  toGraphViz(isExternal=false) {
-    const header = new BlockSection("center", [])
-    if (this.stereotypes.length > 0) {
-      header.addLine("«" + this.stereotypes.join(", ") + "»")
-    }
-    header.addLine(this.name)
-    const block = new BlockNode([header])
-    if (isExternal) {
-      header.addLine(`(from ${this.package.join(".")})`)
-    } else {
-      block.addSections(this.toBlockSections())
-    }
-    
-    const label = block.toHtmlTable()
-    return `${this.name.escapeGraphViz()} [shape=none, label=<${label}>];\n`
-  }
 }
 
 export class ClassObject extends DiagramObject {
@@ -233,22 +216,6 @@ export class PackageObject extends DiagramObject {
     }
     return objects
   }
-  
-  toGraphViz(external=false) {
-    const objects = []
-    for (const [name, object] of this.objects.entries()) {
-      objects.push(object.toGraphViz())
-    }
-    return `subgraph {
-      cluster=true;
-      color=black;
-      label=${this.name.escapeGraphViz()};
-      labeljust=l;
-      labelloc="b";
-      fontsize=16;
-      ${objects.join("\n")}
-    };`
-  }
 }
 
 export class ClassMember {
@@ -336,22 +303,14 @@ export class Relation {
       this.b = lookup(this.b.name)
     }
   }
-  
-  toGraphViz() {
-    return `${this.a.name.escapeGraphViz()} -> ${this.b.name.escapeGraphViz()};`
-  }
 }
 
 export class InheritanceRelation extends Relation {
-  toGraphViz() {
-    return `${this.a.name.escapeGraphViz()} -> ${this.b.name.escapeGraphViz()} [arrowhead=onormal, weight=10];`
-  }
+  
 }
 
 export class ImplementsRelation extends Relation {
-  toGraphViz() {
-    return `${this.a.name.escapeGraphViz()} -> ${this.b.name.escapeGraphViz()} [arrowhead=onormal, weight=10, style=dashed];`
-  }
+  
 }
 
 export class AssociativeRelation extends Relation {
@@ -360,16 +319,6 @@ export class AssociativeRelation extends Relation {
     this.roleA = ""
     this.roleB = ""
     this.name = ""
-  }
-  
-  toGraphViz() {
-    return `${this.a.name.escapeGraphViz()} -> ${this.b.name.escapeGraphViz()} [
-      weight=1,
-      label=${this.name.escapeGraphViz()},
-      headlabel=${this.roleB.escapeGraphViz()},
-      taillabel=${this.roleA.escapeGraphViz()},
-      arrowhead=vee
-    ];`
   }
 }
 

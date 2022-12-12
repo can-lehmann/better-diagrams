@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import {writeFileSync} from "fs"
-
 export class View {
   constructor(objects, diagram) {
     this.objects = new Set(objects)
@@ -47,32 +45,6 @@ export class View {
     }
     
     return {objects: this.objects, adjacent, relations}
-  }
-  
-  toGraphViz(dpi=72) {
-    let output = "digraph {\n"
-    output += "rankdir=BT;\n"
-    output += `dpi=${dpi};` + "\n"
-    
-    const {objects, adjacent, relations} = this.planRender()
-    
-    for (const object of objects) {
-      output += object.toGraphViz()
-    }
-    for (const object of adjacent) {
-      output += object.toGraphViz(true)
-    }
-    
-    for (const relation of relations) {
-      output += relation.toGraphViz() + "\n"
-    }
-    
-    output += "}\n"
-    return output
-  }
-  
-  saveGraphViz(filePath) {
-    writeFileSync(filePath, this.toGraphViz())
   }
 }
 

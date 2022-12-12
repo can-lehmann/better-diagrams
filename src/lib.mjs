@@ -39,5 +39,8 @@ import {buildPackageTree, inferAssociations} from "./passes.mjs"
 import "./parsers/java.mjs"
 import "./parsers/graphql.mjs"
 
+import "./generators/graphviz.mjs"
+import "./generators/latex.mjs"
+
 export { Diagram, View, buildPackageTree, inferAssociations }
 
