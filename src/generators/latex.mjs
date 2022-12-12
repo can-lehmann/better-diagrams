@@ -60,7 +60,7 @@ function membersToLaTeX(name, members) {
     return ""
   }
   let section = `\\subsection*{${name}}\n`
-  section += "\\begin{enumerate}\n"
+  section += "\\begin{enumerate}[label=,leftmargin=0pt]\n"
   for (const member of members) {
     section += `  \\item ${member.toLaTeX()} ${member.doc.toLaTeX()}\n`
   }
