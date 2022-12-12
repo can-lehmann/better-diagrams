@@ -58,6 +58,15 @@ class GraphQlVisitor {
     object.package = [...this.package]
     this.diagram.addObject(object)
     
+    for (const implementedInterface of definition.interfaces || []) {
+      if (implementedInterface.kind == "NamedType") {
+        this.diagram.addRelation(new ImplementsRelation(
+          object,
+          new UnresolvedObject(implementedInterface.name.value)
+        ))
+      }
+    }
+    
     return object
   }
   
@@ -75,6 +84,12 @@ class GraphQlVisitor {
     object.package.push("inputs")
   }
   
+  interfaceTypeDef(definition) {
+    const object = new InterfaceObject(definition.name.value)
+    object.package = [...this.package]
+    this.diagram.addObject(object)
+  }
+  
   document(document) {
     for (const definition of document.definitions) {
       if (this.ignore.has(definition.name.value)) {
@@ -85,6 +100,7 @@ class GraphQlVisitor {
         case "EnumTypeDefinition": this.enumTypeDef(definition); break
         case "InputObjectTypeDefinition": this.inputTypeDef(definition); break
         case "ScalarTypeDefinition": break
+        case "InterfaceTypeDefinition": this.interfaceTypeDef(definition); break
         default:
           throw "Unknown definition kind " + definition.kind
       }
@@ -110,6 +126,7 @@ Diagram.fromGraphQLSchema = function(schemaPath, partialConfig) {
   const diagram = new Diagram()
   loadGraphQL(schemaPath, diagram, config)
   
+  resolveObjects(diagram)
   if (config.associations) {
     inferAssociations(diagram)
   }
@@ -127,6 +144,7 @@ Diagram.fromGraphQLProject = function(basePath, partialConfig) {
     }
   })
   
+  resolveObjects(diagram)
   if (config.associations) {
     inferAssociations(diagram)
   }
