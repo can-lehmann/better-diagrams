@@ -12,6 +12,7 @@ It can generate the following formats:
 
 - GraphViz: Class Diagrams
 - LaTeX: Class Documentation
+- Java: Source Code from Diagrams
 
 ## Getting Started
 
