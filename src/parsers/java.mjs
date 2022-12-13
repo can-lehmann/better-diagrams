@@ -28,10 +28,11 @@ import {
 } from "./../model.mjs"
 
 class Visitor extends BaseJavaCstVisitorWithDefaults {
-  constructor(source, diagram) {
+  constructor(source, diagram, config) {
     super()
     this.source = source
     this.diagram = diagram
+    this.config = config
     this.package = null
   }
   
@@ -60,6 +61,7 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
     
     const modifiers = fieldDeclaration.children.fieldModifier || []
     const visibility = this.getVisibility(modifiers)
+    const customStereotypes = this.parseCustomStereotypes(modifiers)
     
     const decls = fieldDeclaration.children.variableDeclaratorList[0].children.variableDeclarator
     return decls.map(decl => {
@@ -67,6 +69,7 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
       
       const attr = new Attribute(visibility, name, typeName)
       attr.isStatic = this.hasModifier(modifiers, "Static")
+      attr.customStereotypes = [...customStereotypes]
       return attr
     })
   }
@@ -102,6 +105,7 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
     const method = new Method(visibility, name, args, result)
     method.isStatic = this.hasModifier(modifiers, "Static")
     method.isAbstract = this.hasModifier(modifiers, "Abstract")
+    method.customStereotypes = this.parseCustomStereotypes(modifiers)
     return method
   }
   
@@ -200,6 +204,22 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
     }
   }
   
+  parseCustomStereotypes(modifiers) {
+    return modifiers
+      .map(modifier => {
+        const annotation = modifier.children.annotation
+        if (annotation) {
+          const name = annotation[0].children.typeName[0].children.Identifier[0].image
+          console.log(name)
+          if (this.config.customStereotypes.has(name)) {
+            return this.config.customStereotypes.get(name)
+          }
+        }
+        return null
+      })
+      .filter(stereotype => stereotype != null)
+  }
+  
   // Nodes
   packageDeclaration(ctx) {
     this.package = ctx.Identifier.map(ident => ident.image)
@@ -245,6 +265,7 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
       
       object.package = this.package
       object.doc = this.parseDocComment((ctx.classModifier || ctx.normalClassDeclaration)[0])
+      object.customStereotypes = this.parseCustomStereotypes(ctx.classModifier || [])
       this.diagram.addObject(object)
       
       if (decl.superclass) {
@@ -308,22 +329,26 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
   }
 }
 
-const DEFAULT_CONFIG = {associations: true}
+const DEFAULT_CONFIG = {
+  associations: true,
+  customStereotypes: new Map()
+}
 
 Diagram.fromJavaProject = function(basePath, partialConfig) {
+  const config = Object.assign({...DEFAULT_CONFIG}, partialConfig || {})
+  
   const diagram = new Diagram()
   walkTree(basePath, filePath => {
     if (path.parse(filePath).ext == ".java") {
       const code = readFileSync(filePath).toString()
       const tree = parse(code)
-      const visitor = new Visitor(code, diagram)
+      const visitor = new Visitor(code, diagram, config)
       visitor.visit(tree)
     }
   })
   
   resolveObjects(diagram)
   
-  const config = Object.assign({...DEFAULT_CONFIG}, partialConfig || {})
   if (config.associations) {
     inferAssociations(diagram)
   }

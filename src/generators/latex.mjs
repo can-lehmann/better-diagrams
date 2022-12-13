@@ -34,7 +34,7 @@ ClassMember.prototype.toLaTeX = function() {
 }
 
 Attribute.prototype.toLaTeX = function() {
-  return `\\texttt{${this.visibility} ${this.name}: ${this.type}}`
+  return `\\texttt{${this.visibility} ${this.stereotypePrefix}${this.name}: ${this.type}}`
 }
 
 Argument.prototype.toLaTeX = function() {
@@ -43,12 +43,12 @@ Argument.prototype.toLaTeX = function() {
 
 Method.prototype.toLaTeX = function() {
   const args = this.args.map(arg => arg.toLaTeX())
-  return `\\texttt{${this.visibility} ${this.name}(${args.join(", ")}): ${this.result}}`
+  return `\\texttt{${this.visibility} ${this.stereotypePrefix}${this.name}(${args.join(", ")}): ${this.result}}`
 }
 
 Constructor.prototype.toLaTeX = function() {
   const args = this.args.map(arg => arg.toLaTeX())
-  return `\\texttt{${this.visibility} «create» ${this.name}(${args.join(", ")})}`
+  return `\\texttt{${this.visibility} ${this.stereotypePrefix}${this.name}(${args.join(", ")})}`
 }
 
 DocComment.prototype.toLaTeX = function() {

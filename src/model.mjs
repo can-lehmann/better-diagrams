@@ -70,9 +70,10 @@ export class DiagramObject {
     this.name = name
     this.package = []
     this.doc = new DocComment()
+    this.customStereotypes = []
   }
   
-  get stereotypes() { return [] }
+  get stereotypes() { return [...this.customStereotypes] }
   get modifiers() { return ["public"] }
   
   fuse(other) {
@@ -94,10 +95,13 @@ export class ClassObject extends DiagramObject {
     this.attributes = []
     this.constructors = []
     this.methods = []
+    
   }
   
   get stereotypes() {
-    return this.isAbstract ? ["abstract"] : []
+    const stereotypes = super.stereotypes
+    if (this.isAbstract) { stereotypes.push("abstract") }
+    return stereotypes
   }
   
   get modifiers() {
@@ -141,7 +145,7 @@ export class EnumObject extends ClassObject {
     this.constants = []
   }
   
-  get stereotypes() { return ["enumeration"] }
+  get stereotypes() { return ["enumeration", ...super.stereotypes] }
   
   fuse(other) {
     super.fuse(other)
@@ -165,7 +169,7 @@ export class InterfaceObject extends DiagramObject {
     this.methods = []
   }
   
-  get stereotypes() { return ["interface"] }
+  get stereotypes() { return ["interface", ...super.stereotypes] }
   
   fuse(other) {
     super.fuse(other)
@@ -231,7 +235,12 @@ export class ClassMember {
     this.visibility = visibility
     this.name = name
     this.isStatic = false
+    this.customStereotypes = []
     this.doc = new DocComment()
+  }
+  
+  get stereotypes() {
+    return [...this.customStereotypes]
   }
   
   get modifiers() {
@@ -243,6 +252,14 @@ export class ClassMember {
     }
     if (this.isStatic) { modifiers.push("static") }
     return modifiers
+  }
+  
+  get stereotypePrefix() {
+    if (this.stereotypes.length > 0) {
+      return `«${this.stereotypes.join(", ")}» `
+    } else {
+      return ""
+    }
   }
   
   toHtml() {
@@ -257,7 +274,7 @@ export class Attribute extends ClassMember {
   }
   
   toHtml() {
-    let html = `${this.visibility} ${this.name}: ${this.type.escapeHtml()}`
+    let html = `${this.visibility} ${this.stereotypePrefix}${this.name}: ${this.type.escapeHtml()}`
     if (this.isStatic) {
       html = `<u>${html}</u>`
     }
@@ -283,7 +300,7 @@ export class Method extends ClassMember {
   
   toHtml() {
     const args = this.args.map(arg => arg.toHtml()).join(", ")
-    let html = `${this.visibility} ${this.name}(${args}): ${this.result.escapeHtml()}`
+    let html = `${this.visibility} ${this.stereotypePrefix}${this.name}(${args}): ${this.result.escapeHtml()}`
     if (this.isStatic) { html = `<u>${html}</u>` }
     if (this.isAbstract) { html = `<i>${html}</i>` }
     return html
@@ -296,9 +313,13 @@ export class Constructor extends ClassMember {
     this.args = args
   }
   
+  get stereotypes() {
+    return ["create", ...super.stereotypes]
+  }
+  
   toHtml() {
     const args = this.args.map(arg => arg.toHtml()).join(", ")
-    return `${this.visibility} «create» ${this.name}(${args})`
+    return `${this.visibility} ${this.stereotypePrefix}${this.name}(${args})`
   }
 }
 

@@ -55,7 +55,6 @@ Constant.prototype.toJavaDecl = function(indent) {
 }
 
 DiagramObject.prototype.toJava = function(indent) {
-  console.log(this)
   const modifiers = this.modifiers.map(mod => mod + " ").join("")
   return `package ${this.package.join(".")};\n\n` +
          `${indent}${modifiers}${this.toJavaDecl(indent)}`
