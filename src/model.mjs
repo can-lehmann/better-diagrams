@@ -73,6 +73,7 @@ export class DiagramObject {
   }
   
   get stereotypes() { return [] }
+  get modifiers() { return ["public"] }
   
   fuse(other) {
   }
@@ -97,6 +98,12 @@ export class ClassObject extends DiagramObject {
   
   get stereotypes() {
     return this.isAbstract ? ["abstract"] : []
+  }
+  
+  get modifiers() {
+    const modifiers = super.modifiers
+    if (this.isAbstract) { modifiers.push("abstract") }
+    return modifiers
   }
   
   fuse(other) {
@@ -227,6 +234,17 @@ export class ClassMember {
     this.doc = new DocComment()
   }
   
+  get modifiers() {
+    const modifiers = []
+    switch (this.visibility) {
+      case "+": modifiers.push("public"); break
+      case "-": modifiers.push("private"); break
+      case "#": modifiers.push("protected"); break
+    }
+    if (this.isStatic) { modifiers.push("static") }
+    return modifiers
+  }
+  
   toHtml() {
     return ""
   }
@@ -253,6 +271,14 @@ export class Method extends ClassMember {
     this.isAbstract = false
     this.args = args
     this.result = result
+  }
+  
+  get modifiers() {
+    const modifiers = super.modifiers
+    if (this.isAbstract) {
+      modifiers.push("abstract")
+    }
+    return modifiers
   }
   
   toHtml() {

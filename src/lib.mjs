@@ -35,6 +35,7 @@ import "./parsers/graphql.mjs"
 
 import "./generators/graphviz.mjs"
 import "./generators/latex.mjs"
+import "./generators/java.mjs"
 
 export { Diagram, View, buildPackageTree, inferAssociations }
 
