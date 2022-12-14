@@ -274,7 +274,7 @@ export class Attribute extends ClassMember {
   }
   
   toHtml() {
-    let html = `${this.visibility} ${this.stereotypePrefix}${this.name}: ${this.type.escapeHtml()}`
+    let html = `${this.visibility} ${this.stereotypePrefix}${this.name}: ${this.type.toString().escapeHtml()}`
     if (this.isStatic) {
       html = `<u>${html}</u>`
     }
@@ -300,7 +300,7 @@ export class Method extends ClassMember {
   
   toHtml() {
     const args = this.args.map(arg => arg.toHtml()).join(", ")
-    let html = `${this.visibility} ${this.stereotypePrefix}${this.name}(${args}): ${this.result.escapeHtml()}`
+    let html = `${this.visibility} ${this.stereotypePrefix}${this.name}(${args}): ${this.result.toString().escapeHtml()}`
     if (this.isStatic) { html = `<u>${html}</u>` }
     if (this.isAbstract) { html = `<i>${html}</i>` }
     return html
@@ -330,7 +330,7 @@ export class Argument {
   }
   
   toHtml() {
-    return this.name + ":  " + this.type.escapeHtml()
+    return this.name + ":  " + this.type.toString().escapeHtml()
   }
 }
 

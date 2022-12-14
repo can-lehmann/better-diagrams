@@ -110,7 +110,7 @@ export function inferAssociations(diagram) {
         if (attr) {
           diagram.addRelation(parseAssociation(object, diagram, attr))
         } else if (attribute.doc.findAttribute("@noassoc") == null) {
-          const refs = attribute.type.split(/\>|\<|,/).filter(name => name != "")
+          const refs = attribute.type.collectNames()
           for (const ref of refs) {
             if (diagram.hasObject(ref)) {
               const relation = new AssociativeRelation(

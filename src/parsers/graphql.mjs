@@ -26,24 +26,41 @@ import {
   Attribute, Method, Constructor, Argument, Constant,
   InheritanceRelation, ImplementsRelation, AssociativeRelation
 } from "./../model.mjs"
-
+import {
+  Type, CollectionType, NamedType, VoidType, ListType, OptionalType, PrimitiveType, SetType
+} from "./../types.mjs"
 
 class GraphQlVisitor {
-  constructor(diagram) {
+  constructor(diagram, config) {
     this.diagram = diagram
     this.defaultVisibility = "-"
     this.package = []
-    this.ignore = new Set(["Query", "Mutation", "Subscription"])
+    this.config = config
   }
   
-  typeToString(node) {
+  parseType(node, isOptional=true) {
+    let type = null
     switch (node.kind) {
-      case "ListType": return `List<${this.typeToString(node.type)}>`
-      case "NamedType": return node.name.value
-      case "NonNullType": return this.typeToString(node.type)
+      case "ListType": type = new ListType(this.parseType(node.type)); break
+      case "NamedType":
+        switch(node.name.value) {
+          case "String": type = new PrimitiveType("string"); break
+          case "Int": type = new PrimitiveType("int"); break
+          case "Float": type = new PrimitiveType("float"); break
+          case "Boolean": type = new PrimitiveType("boolean"); break
+          case "ID": type = new PrimitiveType(this.config.idType); break
+          default:
+            type = new NamedType(node.name.value)
+        }
+      break
+      case "NonNullType": return this.parseType(node.type, false)
       default:
         throw "Unknown type kind: " + node.kind
     }
+    if (isOptional) {
+      type = new OptionalType(type)
+    }
+    return type
   }
   
   objectTypeDef(definition) {
@@ -52,7 +69,7 @@ class GraphQlVisitor {
       object.addAttribute(new Attribute(
         this.defaultVisibility,
         field.name.value,
-        this.typeToString(field.type)
+        this.parseType(field.type)
       ))
     }
     object.package = [...this.package]
@@ -92,7 +109,7 @@ class GraphQlVisitor {
   
   document(document) {
     for (const definition of document.definitions) {
-      if (this.ignore.has(definition.name.value)) {
+      if (this.config.ignore.has(definition.name.value)) {
         continue
       }
       switch (definition.kind) {
@@ -110,12 +127,14 @@ class GraphQlVisitor {
 
 const DEFAULT_CONFIG = {
   associations: true,
-  basePackage: []
+  basePackage: [],
+  idType: "long",
+  ignore: new Set(["Query", "Mutation", "Subscription"])
 }
 
 function loadGraphQL(schemaPath, diagram, config) {
   const document = parse(readFileSync(schemaPath).toString())
-  const visitor = new GraphQlVisitor(diagram)
+  const visitor = new GraphQlVisitor(diagram, config)
   visitor.package = [...config.basePackage, path.parse(schemaPath).name]
   visitor.document(document)
 }

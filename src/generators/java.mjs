@@ -24,8 +24,39 @@ import {
   Attribute, Method, Constructor, Argument, Constant,
   InheritanceRelation, ImplementsRelation, AssociativeRelation
 } from "./../model.mjs"
+import {
+  Type, CollectionType, NamedType, VoidType, ListType, OptionalType, PrimitiveType, SetType, SourceType
+} from "./../types.mjs"
 
 const INDENT = "    "
+
+Type.prototype.toJava = function(isOptional=false) {
+  console.warn(`WARNING: Unable to convert type ${this.toString()} to Java`)
+  return this.toString()
+}
+
+NamedType.prototype.toJava = function(isOptional=false) { return this.name }
+VoidType.prototype.toJava = function(isOptional=false) { return "void" }
+
+PrimitiveType.prototype.toJava = function(isOptional=false) {
+  const NAMES = {
+    boolean: ["boolean", "Boolean"],
+    byte: ["byte", "Byte"],
+    char: ["char", "Character"],
+    short: ["short", "Short"],
+    int: ["int", "Integer"],
+    long: ["long", "Long"],
+    float: ["float", "Float"],
+    double: ["double", "Double"],
+    string: ["String", "String"]
+  }
+  return NAMES[this.name][isOptional ? 1 : 0]
+}
+
+ListType.prototype.toJava = function(isOptional=false) { return `List<${this.item.toJava()}>` }
+SetType.prototype.toJava = function(isOptional=false) { return `Set<${this.item.toJava()}>` }
+OptionalType.prototype.toJava = function(isOptional=false) { return this.item.toJava(true) }
+SourceType.prototype.toJava = function(isOptional=false) { return this.source }
 
 ClassMember.prototype.toJava = function(indent) {
   const modifiers = this.modifiers.map(mod => mod + " ").join("")
@@ -33,16 +64,16 @@ ClassMember.prototype.toJava = function(indent) {
 }
 
 Attribute.prototype.toJavaDecl = function(indent) {
-  return `${this.type} ${this.name};`
+  return `${this.type.toJava()} ${this.name};`
 }
 
 Argument.prototype.toJava = function() {
-  return `${this.type} ${this.name}`
+  return `${this.type.toJava()} ${this.name}`
 }
 
 Method.prototype.toJavaDecl = function(indent) {
   const args = this.args.map(arg => arg.toJava()).join(", ")
-  return `${this.result} ${this.name}(${args}) {\n${indent}}`
+  return `${this.result.toJava()} ${this.name}(${args}) {\n${indent}}`
 }
 
 Constructor.prototype.toJavaDecl = function(indent) {

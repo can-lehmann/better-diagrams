@@ -26,6 +26,9 @@ import {
   InheritanceRelation, ImplementsRelation, AssociativeRelation,
   DocComment
 } from "./../model.mjs"
+import {
+  Type, CollectionType, NamedType, VoidType, ListType, SetType, SourceType
+} from "./../types.mjs"
 
 class Visitor extends BaseJavaCstVisitorWithDefaults {
   constructor(source, diagram, config) {
@@ -55,9 +58,12 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
     return this.source.substring(node.location.startOffset, node.location.endOffset + 1)
   }
   
+  parseType(node) {
+    return new SourceType(this.extractFromSource(node))
+  }
+  
   parseAttributes(fieldDeclaration) {
-    const type = fieldDeclaration.children.unannType[0]
-    const typeName = this.extractFromSource(type)
+    const type = this.parseType(fieldDeclaration.children.unannType[0])
     
     const modifiers = fieldDeclaration.children.fieldModifier || []
     const visibility = this.getVisibility(modifiers)
@@ -67,7 +73,7 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
     return decls.map(decl => {
       const name = decl.children.variableDeclaratorId[0].children.Identifier[0].image
       
-      const attr = new Attribute(visibility, name, typeName)
+      const attr = new Attribute(visibility, name, type.clone())
       attr.isStatic = this.hasModifier(modifiers, "Static")
       attr.customStereotypes = [...customStereotypes]
       return attr
@@ -80,9 +86,9 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
       for (const param of formalParameterList[0].children.formalParameter) {
         const paramDecl = param.children.variableParaRegularParameter[0]
         
-        const typeName = this.extractFromSource(paramDecl.children.unannType[0])
+        const type = this.parseType(paramDecl.children.unannType[0])
         const name = paramDecl.children.variableDeclaratorId[0].children.Identifier[0].image
-        args.push(new Argument(name, typeName))
+        args.push(new Argument(name, type))
       }
     }
     return args
@@ -96,9 +102,9 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
     
     const name = decl.children.Identifier[0].image
     const args = this.parseArguments(decl.children.formalParameterList)
-    let result = "void"
+    let result = new VoidType()
     if (header.children.result[0].children.unannType) {
-      result = this.extractFromSource(header.children.result[0].children.unannType[0])
+      result = this.parseType(header.children.result[0].children.unannType[0])
     }
     const visibility = this.getVisibility(modifiers)
     

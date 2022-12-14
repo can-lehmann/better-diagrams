@@ -34,16 +34,16 @@ ClassMember.prototype.toLaTeX = function() {
 }
 
 Attribute.prototype.toLaTeX = function() {
-  return `\\texttt{${this.visibility} ${this.stereotypePrefix}${this.name}: ${this.type}}`
+  return `\\texttt{${this.visibility} ${this.stereotypePrefix}${this.name}: ${this.type.toString()}}`
 }
 
 Argument.prototype.toLaTeX = function() {
-  return `${this.name}: ${this.type}`
+  return `${this.name}: ${this.type.toString()}`
 }
 
 Method.prototype.toLaTeX = function() {
   const args = this.args.map(arg => arg.toLaTeX())
-  return `\\texttt{${this.visibility} ${this.stereotypePrefix}${this.name}(${args.join(", ")}): ${this.result}}`
+  return `\\texttt{${this.visibility} ${this.stereotypePrefix}${this.name}(${args.join(", ")}): ${this.result.toString()}}`
 }
 
 Constructor.prototype.toLaTeX = function() {
