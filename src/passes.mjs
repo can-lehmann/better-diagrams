@@ -127,4 +127,14 @@ export function inferAssociations(diagram) {
   }
 }
 
+export function addGetters(diagram) {
+  for (const [name, object] of diagram.objects.entries()) {
+    if (object instanceof ClassObject) {
+      for (const attr of object.attributes) {
+        const getter = new Method("+", `get${attr.name.capitalize()}`, [], attr.type.clone())
+        object.addMethod(getter)
+      }
+    }
+  }
+}
 

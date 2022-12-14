@@ -33,6 +33,13 @@ String.prototype.splitOne = function(delim) {
   return [this.substr(0, index), this.substr(index + 1)]
 }
 
+String.prototype.capitalize = function() {
+  if (this.length > 0) {
+    return this.charAt(0).toUpperCase() + this.substr(1)
+  }
+  return ""
+}
+
 Array.prototype.removeCommonPrefix = function(other) {
   let prefixLength = 0
   while (prefixLength < this.length &&
