@@ -112,6 +112,7 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
     method.isStatic = this.hasModifier(modifiers, "Static")
     method.isAbstract = this.hasModifier(modifiers, "Abstract")
     method.customStereotypes = this.parseCustomStereotypes(modifiers)
+    method.doc = this.parseDocComment(methodDeclaration)
     return method
   }
   
@@ -131,7 +132,6 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
           } else if (child.children.hasOwnProperty("methodDeclaration")) {
             const methodDeclaration = child.children.methodDeclaration[0]
             const method = this.parseMethod(methodDeclaration)
-            method.doc = this.parseDocComment(child)
             object.addMethod(method)
           }
         break
