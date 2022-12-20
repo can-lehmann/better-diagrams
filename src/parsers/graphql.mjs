@@ -27,7 +27,7 @@ import {
   InheritanceRelation, ImplementsRelation, AssociativeRelation
 } from "./../model.mjs"
 import {
-  Type, CollectionType, NamedType, VoidType, ListType, OptionalType, PrimitiveType, SetType
+  Type, CollectionType, NamedType, VoidType, ListType, OptionalType, PrimitiveType, SetType, SourceType
 } from "./../types.mjs"
 
 class GraphQlVisitor {
@@ -38,7 +38,15 @@ class GraphQlVisitor {
     this.config = config
   }
   
+  extractFromSource(node) {
+    return node.loc.source.body.substring(node.loc.start, node.loc.end)
+  }
+  
+  
   parseType(node, isOptional=true) {
+    if (this.config.sourceTypes) {
+      return new SourceType(this.extractFromSource(node))
+    }
     let type = null
     switch (node.kind) {
       case "ListType": type = new ListType(this.parseType(node.type)); break
@@ -129,7 +137,8 @@ const DEFAULT_CONFIG = {
   associations: true,
   basePackage: [],
   idType: "long",
-  ignore: new Set(["Query", "Mutation", "Subscription"])
+  ignore: new Set(["Query", "Mutation", "Subscription"]),
+  sourceTypes: false
 }
 
 function loadGraphQL(schemaPath, diagram, config) {
