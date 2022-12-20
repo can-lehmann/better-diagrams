@@ -31,29 +31,24 @@ import {
 function text(...strings) {
   strings = strings.map((string) => string.toString());
 
-  return strings.join('');
+  return strings.join("");
 }
 
 function textbf(...text) {
   text = text.map((text) => text.toString());
-
-  return `\\textbf{${text.join('')}}`;
+  return `\\textbf{${text.join("")}}`;
 }
 
 function texttt(...text) {
   text = text.map((text) => text.toString());
-
-  return `\\texttt{${text.join('')}}`;
+  return `\\texttt{${text.join("")}}`;
 }
 
 function subsection(title, starred = false, tocTitle = null) {
-
   const cmd = starred ? '\\subsection*' : '\\subsection';
-
   if (tocTitle) {
     return `${cmd}[${tocTitle}]{${title}}`;
   }
-
   return `${cmd}{${title}}`;
 }
 
@@ -65,29 +60,27 @@ function ref(ref) {
   return `\\ref{${ref}}`;
 }
 
-function itemize(items, options = '') {
-
+function itemize(items, options = "") {
   if (!items || !items.length) {
-    return '';
+    return "";
   }
 
   return text(
-      `\\begin{itemize}[${options}]`, '\n',
-      items.map((item) => `\\item ${item}`).join('\n'), '\n',
-      `\\end{itemize}`, '\n'
+    `\\begin{itemize}[${options}]`, '\n',
+    items.map((item) => `\\item ${item}`).join('\n'), '\n',
+    `\\end{itemize}`, '\n'
   );
 }
 
-function enumerate(items, options = '') {
-
+function enumerate(items, options = "") {
   if (!items || !items.length) {
-    return '';
+    return "";
   }
 
   return text(
-      `\\begin{enumerate}[${options}]`, '\n',
-      items.map((item) => `\\item ${item}`).join('\n'), '\n',
-      `\\end{enumerate}`, '\n'
+    `\\begin{enumerate}[${options}]`, '\n',
+    items.map((item) => `\\item ${item}`).join('\n'), '\n',
+    `\\end{enumerate}`, '\n'
   );
 }
 
@@ -99,17 +92,17 @@ String.prototype.encodeLaTeX = function() {
 
 ClassMember.prototype.toLaTeX = function() {
   return texttt(
-      textbf(
-          this.name.encodeLaTeX()
-      )
+    textbf(
+      this.name.encodeLaTeX()
+    )
   );
 }
 
 Attribute.prototype.toLaTeX = function() {
   return text(
-      texttt(textbf(`${this.visibility} ${this.stereotypePrefix}${this.name}: ${this.type.toString()}`)),
-      ` \\\\ `,
-      this.doc.content.toString()
+    texttt(textbf(`${this.visibility} ${this.stereotypePrefix}${this.name}: ${this.type.toString()}`)),
+    ` \\\\ `,
+    this.doc.content.toString()
   );
 }
 
@@ -120,16 +113,16 @@ Argument.prototype.toLaTeX = function() {
 Method.prototype.toLaTeX = function() {
   const args = this.args.map(arg => arg.toLaTeX())
   return text(
-      texttt(textbf(`${this.visibility} ${this.stereotypePrefix}${this.name}(${args.join(", ")}): ${this.result.toString()}`)),
-      '\\\\',
-      this.doc.content.toString(),
-      '\n',
-      itemize(
-          this.doc.attrs
-              .filter((attr) => attr.name === '@param')
-              .map((attr) => `${texttt(attr.params[0])}: ${attr.value}`),
-          'label=,leftmargin=0pt'
-      )
+    texttt(textbf(`${this.visibility} ${this.stereotypePrefix}${this.name}(${args.join(", ")}): ${this.result.toString()}`)),
+    '\\\\',
+    this.doc.content.toString(),
+    '\n',
+    itemize(
+      this.doc.attrs
+        .filter((attr) => attr.name === '@param')
+        .map((attr) => `${texttt(attr.params[0])}: ${attr.value}`),
+      'label=,leftmargin=0pt'
+    )
   );
 }
 
@@ -137,12 +130,12 @@ Constructor.prototype.toLaTeX = function() {
   const args = this.args.map(arg => arg.toLaTeX())
 
   return texttt(
-          textbf(
-              `${this.visibility} ${this.stereotypePrefix}${this.name}(${args.join(", ")})`
-          )
+      textbf(
+        `${this.visibility} ${this.stereotypePrefix}${this.name}(${args.join(", ")})`
       )
-      + ' \\\\ '
-      + this.doc.content.toString();
+    )
+    + ' \\\\ '
+    + this.doc.content.toString();
 
 }
 
@@ -156,30 +149,31 @@ function membersToLaTeX(name, members) {
   }
 
   return subsectionmark(name)
-      + '\n'
-      +  subsection(name, true)
-      + '\n'
-      + itemize(members.map((member) => `\\item ${member.toLaTeX()}`), 'label=,leftmargin=0pt')
-      + '\n';
+    + '\n'
+    +  subsection(name, true)
+    + '\n'
+    + itemize(members.map((member) => `\\item ${member.toLaTeX()}`), 'label=,leftmargin=0pt')
+    + '\n';
 }
 
 DiagramObject.prototype.toLaTeX = function(config) {
   const packageName = this.package.removeCommonPrefix(config.packagePrefix).join(".");
 
   return  subsectionmark(this.name)
-      + '\n'
-      + subsection(
-          text(
-              texttt(textbf(this.name)),
-              '\\hfill',
-              texttt(textbf(
-                  config.useFaIcons ? `\\faIcon{folder} ${packageName}` : packageName
-              )),
-              `\n`
-          ), false, this.name)
-      + '\n'
-      + `${this.doc.toLaTeX()}`
-      + '\n';
+    + '\n'
+    + subsection(
+      text(
+        texttt(textbf(this.name)),
+        '\\hfill',
+        texttt(textbf(
+          config.useFaIcons ? `\\faIcon{folder} ${packageName}` : packageName
+        )),
+        `\n`
+      ), false, this.name
+    )
+    + '\n'
+    + `${this.doc.toLaTeX()}`
+    + '\n';
 }
 
 ClassObject.prototype.toLaTeX = function(config) {
@@ -244,7 +238,6 @@ const DEFAULT_CONFIG = {
 };
 
 View.prototype.toLaTeX = function(partialConfig) {
-
   // setup relation mappings
   const relations = new Map();
   for (const relation of this.diagram.relations) {
