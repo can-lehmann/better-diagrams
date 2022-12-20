@@ -91,7 +91,7 @@ AssociativeRelation.prototype.toGraphViz = function() {
     taillabel=${(this.roleA + "\n" + this.multiplicityA).escapeGraphViz()},
     arrowtail=${toArrowType(this.headA)},
     arrowhead=${toArrowType(this.headB)},
-    minlen=0,
+    minlen=${this.visual.flat ? 0 : 1},
     dir=both
   ];`
 }

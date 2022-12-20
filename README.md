@@ -72,7 +72,7 @@ You can add custom association relations between classes in a Java Project using
 ```java
 public class A {
   /**
-   * @assoc 1 roleA relationName *-> 0..* roleB B
+   * @assoc 1 roleA relationName *-> 0..* roleB $flat B
    */
   private B myAttribute;
 }
@@ -82,9 +82,10 @@ public class B {}
 
 ![](assets/associations.png)
 
-The last word in the `@assoc` attribute is the target class.
+The last word in the `@assoc` attribute is always the target class.
 The word that includes the `-` character represents the edge between the two classes.
 Numbers or ranges (`0..*`) will be interpreted as the multiplicities of the objects.
+Words starting with `$` are visual attributes, they influence how the association will be displayed.
 Roles and multiplicities before the edge belong to the first class, while any roles and multiplicities after the edge belong to the target object.
 
 The edge can specify its tips on both ends:
