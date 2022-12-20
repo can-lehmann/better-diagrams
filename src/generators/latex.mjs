@@ -267,7 +267,11 @@ View.prototype.toLaTeX = function(partialConfig) {
         return order
       }
     }
-    return a.name.localeCompare(b.name)
+    if (a.package.length == b.package.length) {
+      return a.name.localeCompare(b.name)
+    } else {
+      return a.package.length - b.package.length
+    }
   })
 
   for (const object of objects) {
