@@ -30,7 +30,6 @@ import {
 
 function text(...strings) {
   strings = strings.map((string) => string.toString());
-
   return strings.join("");
 }
 
@@ -45,7 +44,7 @@ function texttt(...text) {
 }
 
 function subsection(title, starred = false, tocTitle = null) {
-  const cmd = starred ? '\\subsection*' : '\\subsection';
+  const cmd = starred ? "\\subsection*" : "\\subsection";
   if (tocTitle) {
     return `${cmd}[${tocTitle}]{${title}}`;
   }
@@ -66,9 +65,9 @@ function itemize(items, options = "") {
   }
 
   return text(
-    `\\begin{itemize}[${options}]`, '\n',
-    items.map((item) => `\\item ${item}`).join('\n'), '\n',
-    `\\end{itemize}`, '\n'
+    `\\begin{itemize}[${options}]\n`,
+    items.map(item => `\\item ${item}\n`).join(""),
+    `\\end{itemize}\n`
   );
 }
 
@@ -78,9 +77,9 @@ function enumerate(items, options = "") {
   }
 
   return text(
-    `\\begin{enumerate}[${options}]`, '\n',
-    items.map((item) => `\\item ${item}`).join('\n'), '\n',
-    `\\end{enumerate}`, '\n'
+    `\\begin{enumerate}[${options}]\n`,
+    items.map((item) => `\\item ${item}\n`).join(""),
+    `\\end{enumerate}\n`
   );
 }
 
@@ -98,12 +97,29 @@ ClassMember.prototype.toLaTeX = function() {
   );
 }
 
-Attribute.prototype.toLaTeX = function() {
+DocComment.prototype.toLaTeX = function() {
   return text(
-    texttt(textbf(`${this.visibility} ${this.stereotypePrefix}${this.name}: ${this.type.toString()}`)),
-    ` \\\\ `,
-    this.doc.content.toString()
-  );
+    this.content.encodeLaTeX(),
+    "\n",
+    itemize(
+      this.attrs
+        .filter((attr) => attr.name === "@param")
+        .map((attr) => `${texttt(attr.params[0])}: ${attr.value}`),
+      "label="
+    )
+  )
+}
+
+Attribute.prototype.toLaTeX = function() {
+  const lines = [texttt(textbf(
+    `${this.visibility} ${this.stereotypePrefix}${this.name}: ${this.type.toString()}`
+  ))]
+  if (this.doc.content.length > 0) {
+    lines.push("\\\\")
+    lines.push(this.doc.toLaTeX())
+  }
+  
+  return text(...lines)
 }
 
 Argument.prototype.toLaTeX = function() {
@@ -112,36 +128,30 @@ Argument.prototype.toLaTeX = function() {
 
 Method.prototype.toLaTeX = function() {
   const args = this.args.map(arg => arg.toLaTeX())
-  return text(
-    texttt(textbf(`${this.visibility} ${this.stereotypePrefix}${this.name}(${args.join(", ")}): ${this.result.toString()}`)),
-    '\\\\',
-    this.doc.content.toString(),
-    '\n',
-    itemize(
-      this.doc.attrs
-        .filter((attr) => attr.name === '@param')
-        .map((attr) => `${texttt(attr.params[0])}: ${attr.value}`),
-      'label=,leftmargin=0pt'
-    )
-  );
+  const prefix = `${this.visibility} ${this.stereotypePrefix}`
+  const signature = `${this.name}(${args.join(", ")}): ${this.result.toString()}`
+  
+  const lines = [texttt(textbf(prefix + signature))]
+  if (this.doc.content.length > 0) {
+    lines.push("\\\\")
+    lines.push(this.doc.toLaTeX())
+  }
+  
+  return text(...lines)
 }
 
 Constructor.prototype.toLaTeX = function() {
   const args = this.args.map(arg => arg.toLaTeX())
+  
+  const lines = [texttt(textbf(`${this.visibility} ${this.stereotypePrefix}${this.name}(${args.join(", ")})`))]
+  if (this.doc.content.length > 0) {
+    lines.push("\\\\")
+    lines.push(this.doc.toLaTeX())
+  }  
 
-  return texttt(
-      textbf(
-        `${this.visibility} ${this.stereotypePrefix}${this.name}(${args.join(", ")})`
-      )
-    )
-    + ' \\\\ '
-    + this.doc.content.toString();
-
+  return text(...lines)
 }
 
-DocComment.prototype.toLaTeX = function() {
-  return this.content.encodeLaTeX();
-}
 
 function membersToLaTeX(name, members) {
   if (!members || !members.length) {
@@ -149,31 +159,31 @@ function membersToLaTeX(name, members) {
   }
 
   return subsectionmark(name)
-    + '\n'
+    + "\n"
     +  subsection(name, true)
-    + '\n'
-    + itemize(members.map((member) => `\\item ${member.toLaTeX()}`), 'label=,leftmargin=0pt')
-    + '\n';
+    + "\n"
+    + itemize(members.map((member) => ` ${member.toLaTeX()}`), "label=,leftmargin=0pt")
+    + "\n";
 }
 
 DiagramObject.prototype.toLaTeX = function(config) {
   const packageName = this.package.removeCommonPrefix(config.packagePrefix).join(".");
 
   return  subsectionmark(this.name)
-    + '\n'
+    + "\n"
     + subsection(
       text(
         texttt(textbf(this.name)),
-        '\\hfill',
+        "\\hfill",
         texttt(textbf(
           config.useFaIcons ? `\\faIcon{folder} ${packageName}` : packageName
         )),
         `\n`
       ), false, this.name
     )
-    + '\n'
+    + "\n"
     + `${this.doc.toLaTeX()}`
-    + '\n';
+    + "\n";
 }
 
 ClassObject.prototype.toLaTeX = function(config) {
@@ -193,11 +203,11 @@ ClassObject.prototype.toLaTeX = function(config) {
   }
 
   if (inheritanceRelations && inheritanceRelations.length) {
-    section += textbf(`${config.translations.extends}: `) + inheritanceRelations.map((relation) => texttt(ref(relation.b.name))).join(', ') + '\\\\';
+    section += textbf(`${config.translations.extends}: `) + inheritanceRelations.map((relation) => texttt(ref(relation.b.name))).join(", ") + "\\\\";
   }
 
   if (implementsRelations && implementsRelations.length) {
-    section += textbf(`${config.translations.implements}: `) + implementsRelations.map((relation) => texttt(ref(relation.b.name))).join(', ') + '\\\\';
+    section += textbf(`${config.translations.implements}: `) + implementsRelations.map((relation) => texttt(ref(relation.b.name))).join(", ") + "\\\\";
   }
 
   return section;
@@ -210,7 +220,7 @@ InterfaceObject.prototype.toLaTeX = function(config) {
   const relations = config.relations.get(this) || [];
 
   if (relations && relations.length) {
-    section += textbf(`${config.translations.extends}: `) + relations.map((relation) => texttt(ref(relation.name))).join(', ') + '\n';
+    section += textbf(`${config.translations.extends}: `) + relations.map((relation) => texttt(ref(relation.name))).join(", ") + "\n";
   }
 
   return section;
@@ -229,11 +239,11 @@ const DEFAULT_CONFIG = {
   packagePrefix: [],
   useFaIcons: false,
   translations: {
-    constants: 'Constants',
-    attributes: 'Attributes',
-    methods: 'Methods',
-    extends: 'Extends from',
-    implements: 'Implements from',
+    constants: "Constants",
+    attributes: "Attributes",
+    methods: "Methods",
+    extends: "Extends ",
+    implements: "Implements "
   }
 };
 
