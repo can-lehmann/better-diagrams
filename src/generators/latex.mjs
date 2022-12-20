@@ -1,7 +1,7 @@
 /*
  * Copyright 2022 Can Joshua Lehmann & Oliver Enes
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License")
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -29,64 +29,64 @@ import {
 */
 
 function text(...strings) {
-  strings = strings.map((string) => string.toString());
-  return strings.join("");
+  strings = strings.map((string) => string.toString())
+  return strings.join("")
 }
 
 function textbf(...text) {
-  text = text.map((text) => text.toString());
-  return `\\textbf{${text.join("")}}`;
+  text = text.map((text) => text.toString())
+  return `\\textbf{${text.join("")}}`
 }
 
 function texttt(...text) {
-  text = text.map((text) => text.toString());
-  return `\\texttt{${text.join("")}}`;
+  text = text.map((text) => text.toString())
+  return `\\texttt{${text.join("")}}`
 }
 
 function subsection(title, starred = false, tocTitle = null) {
-  const cmd = starred ? "\\subsection*" : "\\subsection";
+  const cmd = starred ? "\\subsection*" : "\\subsection"
   if (tocTitle) {
-    return `${cmd}[${tocTitle}]{${title}}`;
+    return `${cmd}[${tocTitle}]{${title}}`
   }
-  return `${cmd}{${title}}`;
+  return `${cmd}{${title}}`
 }
 
 function subsectionmark(mark) {
-  return `\\subsectionmark{${mark}}`;
+  return `\\subsectionmark{${mark}}`
 }
 
 function ref(ref) {
-  return `\\ref{${ref}}`;
+  return `\\ref{${ref}}`
 }
 
 function itemize(items, options = "") {
   if (!items || !items.length) {
-    return "";
+    return ""
   }
 
   return text(
     `\\begin{itemize}[${options}]\n`,
     items.map(item => `\\item ${item}\n`).join(""),
     `\\end{itemize}\n`
-  );
+  )
 }
 
 function enumerate(items, options = "") {
   if (!items || !items.length) {
-    return "";
+    return ""
   }
 
   return text(
     `\\begin{enumerate}[${options}]\n`,
     items.map((item) => `\\item ${item}\n`).join(""),
     `\\end{enumerate}\n`
-  );
+  )
 }
 
 // ====
 
 String.prototype.encodeLaTeX = function() {
-  return this.split("_").join("\\_");
+  return this.split("_").join("\\_")
 }
 
 ClassMember.prototype.toLaTeX = function() {
@@ -94,7 +94,7 @@ ClassMember.prototype.toLaTeX = function() {
     textbf(
       this.name.encodeLaTeX()
     )
-  );
+  )
 }
 
 DocComment.prototype.toLaTeX = function() {
@@ -123,7 +123,7 @@ Attribute.prototype.toLaTeX = function() {
 }
 
 Argument.prototype.toLaTeX = function() {
-  return `${this.name}: ${this.type.toString()}`;
+  return `${this.name}: ${this.type.toString()}`
 }
 
 Method.prototype.toLaTeX = function() {
@@ -155,7 +155,7 @@ Constructor.prototype.toLaTeX = function() {
 
 function membersToLaTeX(name, members) {
   if (!members || !members.length) {
-    return "";
+    return ""
   }
 
   return subsectionmark(name)
@@ -163,11 +163,11 @@ function membersToLaTeX(name, members) {
     +  subsection(name, true)
     + "\n"
     + itemize(members.map((member) => ` ${member.toLaTeX()}`), "label=,leftmargin=0pt")
-    + "\n";
+    + "\n"
 }
 
 DiagramObject.prototype.toLaTeX = function(config) {
-  const packageName = this.package.removeCommonPrefix(config.packagePrefix).join(".");
+  const packageName = this.package.removeCommonPrefix(config.packagePrefix).join(".")
 
   return  subsectionmark(this.name)
     + "\n"
@@ -183,56 +183,56 @@ DiagramObject.prototype.toLaTeX = function(config) {
     )
     + "\n"
     + `${this.doc.toLaTeX()}`
-    + "\n";
+    + "\n"
 }
 
 ClassObject.prototype.toLaTeX = function(config) {
-  let section = DiagramObject.prototype.toLaTeX.bind(this)(config);
-  section += membersToLaTeX(config.translations.attributes, this.attributes);
-  section += membersToLaTeX(config.translations.methods, [...this.constructors, ...this.methods]);
+  let section = DiagramObject.prototype.toLaTeX.bind(this)(config)
+  section += membersToLaTeX(config.translations.attributes, this.attributes)
+  section += membersToLaTeX(config.translations.methods, [...this.constructors, ...this.methods])
 
   // inheritance
-  const inheritanceRelations = [];
-  const implementsRelations = [];
+  const inheritanceRelations = []
+  const implementsRelations = []
   for (const relation of config.relations.get(this) ||  []) {
     if (relation instanceof InheritanceRelation) {
-      inheritanceRelations.push(relation);
+      inheritanceRelations.push(relation)
     } else if (relation instanceof ImplementsRelation) {
-      implementsRelations.push(relation);
+      implementsRelations.push(relation)
     }
   }
 
   if (inheritanceRelations && inheritanceRelations.length) {
-    section += textbf(`${config.translations.extends}: `) + inheritanceRelations.map((relation) => texttt(ref(relation.b.name))).join(", ") + "\\\\";
+    section += textbf(`${config.translations.extends}: `) + inheritanceRelations.map((relation) => texttt(ref(relation.b.name))).join(", ") + "\\\\"
   }
 
   if (implementsRelations && implementsRelations.length) {
-    section += textbf(`${config.translations.implements}: `) + implementsRelations.map((relation) => texttt(ref(relation.b.name))).join(", ") + "\\\\";
+    section += textbf(`${config.translations.implements}: `) + implementsRelations.map((relation) => texttt(ref(relation.b.name))).join(", ") + "\\\\"
   }
 
-  return section;
+  return section
 }
 
 InterfaceObject.prototype.toLaTeX = function(config) {
-  let section = DiagramObject.prototype.toLaTeX.bind(this)(config);
-  section += membersToLaTeX(config.translations.methods, this.methods);
+  let section = DiagramObject.prototype.toLaTeX.bind(this)(config)
+  section += membersToLaTeX(config.translations.methods, this.methods)
 
-  const relations = config.relations.get(this) || [];
+  const relations = config.relations.get(this) || []
 
   if (relations && relations.length) {
-    section += textbf(`${config.translations.extends}: `) + relations.map((relation) => texttt(ref(relation.name))).join(", ") + "\n";
+    section += textbf(`${config.translations.extends}: `) + relations.map((relation) => texttt(ref(relation.name))).join(", ") + "\n"
   }
 
-  return section;
+  return section
 }
 
 EnumObject.prototype.toLaTeX = function(config) {
-  let section = DiagramObject.prototype.toLaTeX.bind(this)(config);
-  section += membersToLaTeX(config.translations.constants, this.constants);
-  section += membersToLaTeX(config.translations.attributes, this.attributes);
-  section += membersToLaTeX(config.translations.methods, this.methods);
+  let section = DiagramObject.prototype.toLaTeX.bind(this)(config)
+  section += membersToLaTeX(config.translations.constants, this.constants)
+  section += membersToLaTeX(config.translations.attributes, this.attributes)
+  section += membersToLaTeX(config.translations.methods, this.methods)
 
-  return section;
+  return section
 }
 
 const DEFAULT_CONFIG = {
@@ -245,39 +245,39 @@ const DEFAULT_CONFIG = {
     extends: "Extends ",
     implements: "Implements "
   }
-};
+}
 
 View.prototype.toLaTeX = function(partialConfig) {
   // setup relation mappings
-  const relations = new Map();
+  const relations = new Map()
   for (const relation of this.diagram.relations) {
-    const oldMapping = relations.get(relation.a) || [];
-    relations.set(relation.a, oldMapping.concat([relation.b]));
+    const oldMapping = relations.get(relation.a) || []
+    relations.set(relation.a, oldMapping.concat([relation.b]))
   }
 
-  const config = Object.assign({...DEFAULT_CONFIG, relations}, partialConfig || {});
+  const config = Object.assign({...DEFAULT_CONFIG, relations}, partialConfig || {})
 
-  let result = "";
+  let result = ""
 
-  const objects = [...this.objects];
+  const objects = [...this.objects]
   objects.sort((a, b) => {
     for (let it = 0; it < a.package.length && it < b.package.length; it++) {
-      const order = a.package[it].localeCompare(b.package[it]);
+      const order = a.package[it].localeCompare(b.package[it])
       if (order != 0) {
-        return order;
+        return order
       }
     }
-    return a.name.localeCompare(b.name);
-  });
+    return a.name.localeCompare(b.name)
+  })
 
   for (const object of objects) {
-    result += object.toLaTeX(config) + "\n";
+    result += object.toLaTeX(config) + "\n"
   }
 
-  return result;
+  return result
 }
 
 View.prototype.saveLaTeX = function(filePath, partialConfig) {
-  writeFileSync(filePath, this.toLaTeX(partialConfig));
+  writeFileSync(filePath, this.toLaTeX(partialConfig))
 }
 
