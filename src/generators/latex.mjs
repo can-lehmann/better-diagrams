@@ -46,6 +46,14 @@ function texttt(...text) {
   return `\\texttt{${text.join('')}}`;
 }
 
+function index(text, indexName = null) {
+  if (indexName) {
+    return `\\index[${indexName}]{${text}}`;
+  }
+
+  return `\\index{${text}}`;
+}
+
 function subsection(title, starred = false, tocTitle = null) {
 
   const cmd = starred ? '\\subsection*' : '\\subsection';
@@ -72,7 +80,7 @@ function itemize(items, options = '') {
   }
 
   return text(
-      `\\begin{itemize}[${options}]`, '\n',
+      options ? `\\begin{itemize}[${options}]` : '\\begin{itemize}', '\n',
       items.map((item) => `\\item ${item}`).join('\n'), '\n',
       `\\end{itemize}`, '\n'
   );
@@ -85,7 +93,7 @@ function enumerate(items, options = '') {
   }
 
   return text(
-      `\\begin{enumerate}[${options}]`, '\n',
+      options ? `\\begin{enumerate}[${options}]` : '\\begin{enumerate}', '\n',
       items.map((item) => `\\item ${item}`).join('\n'), '\n',
       `\\end{enumerate}`, '\n'
   );
@@ -167,6 +175,7 @@ DiagramObject.prototype.toLaTeX = function(config) {
   const packageName = this.package.removeCommonPrefix(config.packagePrefix).join(".");
 
   return  subsectionmark(this.name)
+      + config.createIndex ? index(this.name, 'classes') + '\n' : ''
       + '\n'
       + subsection(
           text(
@@ -234,6 +243,7 @@ EnumObject.prototype.toLaTeX = function(config) {
 const DEFAULT_CONFIG = {
   packagePrefix: [],
   useFaIcons: false,
+  createIndex: false,
   translations: {
     constants: 'Constants',
     attributes: 'Attributes',
