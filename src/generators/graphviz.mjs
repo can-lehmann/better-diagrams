@@ -91,6 +91,7 @@ AssociativeRelation.prototype.toGraphViz = function() {
     taillabel=${(this.roleA + "\n" + this.multiplicityA).escapeGraphViz()},
     arrowtail=${toArrowType(this.headA)},
     arrowhead=${toArrowType(this.headB)},
+    minlen=${this.visual.flat ? 0 : 1},
     dir=both
   ];`
 }
@@ -117,7 +118,7 @@ View.prototype.toGraphViz = function(dpi=72) {
   return output
 }
 
-View.prototype.saveGraphViz = function(filePath) {
-  writeFileSync(filePath, this.toGraphViz())
+View.prototype.saveGraphViz = function(filePath, dpi=72) {
+  writeFileSync(filePath, this.toGraphViz(dpi))
 }
 

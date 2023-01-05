@@ -100,7 +100,7 @@ export class SourceType extends Type {
   
   collectNames() {
     return new Set(this.source
-      .split(/\>|\<|\(|\)|\[|\]|\{|\}|,|\||\./)
+      .split(/\>|\<|\(|\)|\[|\]|\{|\}|,|\||\.|\!/)
       .filter(name => name != "")
     )
   }

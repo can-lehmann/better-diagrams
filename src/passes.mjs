@@ -65,7 +65,9 @@ function parseAssociation(object, diagram, attr) {
   let isStart = true
   for (let it = 0; it < attr.params.length - 1; it++) {
     const param = attr.params[it]
-    if (param.includes("-")) {
+    if (param.startsWith("$")) {
+      relation.visual[param.substr(1)] = true
+    } else if (param.includes("-")) {
       const index = param.indexOf("-")
       relation.headA = param.charAt(index - 1)
       relation.headB = param.charAt(index + 1)

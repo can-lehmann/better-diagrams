@@ -344,6 +344,7 @@ export class Relation {
   constructor(a, b) {
     this.a = a
     this.b = b
+    this.visual = {}
   }
   
   shouldRender(rendered) {
