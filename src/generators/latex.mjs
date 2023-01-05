@@ -59,6 +59,14 @@ function ref(ref) {
   return `\\ref{${ref}}`
 }
 
+function index(text, indexName = null) {
+  if (indexName) {
+    return `\\index[${indexName}]{${text}}`;
+  }
+
+  return `\\index{${text}}`;
+}
+
 function itemize(items, options = "") {
   if (!items || !items.length) {
     return ""
@@ -171,6 +179,7 @@ DiagramObject.prototype.toLaTeX = function(config) {
 
   return  subsectionmark(this.name)
     + "\n"
+    + config.createIndex ? index(this.name, 'classes') + '\n' : ''
     + subsection(
       text(
         texttt(textbf(this.name)),
@@ -237,6 +246,7 @@ EnumObject.prototype.toLaTeX = function(config) {
 
 const DEFAULT_CONFIG = {
   packagePrefix: [],
+  createIndex: false,
   useFaIcons: false,
   translations: {
     constants: "Constants",
