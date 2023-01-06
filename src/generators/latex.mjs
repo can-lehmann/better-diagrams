@@ -179,7 +179,7 @@ DiagramObject.prototype.toLaTeX = function(config) {
 
   return  subsectionmark(this.name)
     + "\n"
-    + config.createIndex ? index(this.name, 'classes') + '\n' : ''
+    + (config.createIndex ? index(this.name, "classes") + "\n" : "")
     + subsection(
       text(
         texttt(textbf(this.name)),
