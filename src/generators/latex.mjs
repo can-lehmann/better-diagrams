@@ -19,7 +19,7 @@ import {View} from "./../rendering.mjs"
 import {
   DiagramObject,
   ClassObject, EnumObject, InterfaceObject,
-  ClassMember, Attribute, Method, Constructor, Argument,
+  ClassMember, Constant, Attribute, Method, Constructor, Argument,
   DocComment, ImplementsRelation, InheritanceRelation
 } from "./../model.mjs"
 
@@ -103,6 +103,16 @@ ClassMember.prototype.toLaTeX = function() {
       this.name.encodeLaTeX()
     )
   )
+}
+
+Constant.prototype.toLaTeX = function() {
+  const lines = [texttt(textbf(this.name.encodeLaTeX()))]
+  if (this.doc.content.length > 0) {
+    lines.push("\\\\")
+    lines.push(this.doc.toLaTeX())
+  }
+  
+  return text(...lines)
 }
 
 DocComment.prototype.toLaTeX = function() {
