@@ -261,12 +261,24 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
         
         return
       }
+      
       const decl = ctx.normalClassDeclaration[0].children
       const name = decl.typeIdentifier[0].children.Identifier[0].image
       const body = decl.classBody[0].children.classBodyDeclaration
       
+      
       const object = new ClassObject(name)
       object.isAbstract = this.hasModifier(ctx.classModifier, "Abstract")
+      
+      if (decl.typeParameters) {
+        const typeParameters = decl.typeParameters[0].children
+          .typeParameterList[0].children
+          .typeParameter
+        typeParameters
+          .map(param => this.parseType(param))
+          .forEach(type => object.addGeneric(type))
+      }
+      
       this.parseClassBody(body || [], object)
       
       object.package = this.package

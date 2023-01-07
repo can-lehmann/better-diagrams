@@ -71,6 +71,11 @@ export class DiagramObject {
     this.package = []
     this.doc = new DocComment()
     this.customStereotypes = []
+    this.generics = []
+  }
+  
+  addGeneric(genericType) {
+    this.generics.push(genericType)
   }
   
   get stereotypes() { return [...this.customStereotypes] }
