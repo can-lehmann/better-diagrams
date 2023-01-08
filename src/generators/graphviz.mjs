@@ -29,11 +29,7 @@ DiagramObject.prototype.toGraphViz = function(isExternal=false) {
   if (this.stereotypes.length > 0) {
     header.addLine("«" + this.stereotypes.join(", ") + "»")
   }
-  let name = this.name
-  if (this.generics.length > 0) {
-    name += `<${this.generics.map(type => type.toString()).join(", ")}>`.escapeHtml()
-  }
-  header.addLine(name)
+  header.addLine(this.nameWithGenerics.escapeHtml())
   const block = new BlockNode([header])
   if (isExternal) {
     header.addLine(`(from ${this.package.join(".")})`)

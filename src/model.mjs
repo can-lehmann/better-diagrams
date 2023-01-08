@@ -81,6 +81,14 @@ export class DiagramObject {
   get stereotypes() { return [...this.customStereotypes] }
   get modifiers() { return ["public"] }
   
+  get nameWithGenerics() {
+    let name = this.name
+    if (this.generics.length > 0) {
+      name += `<${this.generics.map(type => type.toString()).join(", ")}>`
+    }
+    return name
+  }
+  
   fuse(other) {
   }
   

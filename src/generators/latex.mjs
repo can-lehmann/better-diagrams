@@ -192,7 +192,7 @@ DiagramObject.prototype.toLaTeX = function(config) {
     + (config.createIndex ? index(this.name, "classes") + "\n" : "")
     + subsection(
       text(
-        texttt(textbf(this.name)),
+        texttt(textbf(this.nameWithGenerics)),
         "\\hfill",
         texttt(textbf(
           config.useFaIcons ? `\\faIcon{folder} ${packageName}` : packageName
