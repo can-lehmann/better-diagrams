@@ -235,6 +235,16 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
       .filter(stereotype => stereotype != null)
   }
   
+  parseTypeParameters(object, typeParameters) {
+    if (typeParameters) {
+      typeParameters[0].children
+        .typeParameterList[0].children
+        .typeParameter
+        .map(param => this.parseType(param))
+        .forEach(type => object.addGeneric(type))
+    }
+  }
+  
   // Nodes
   packageDeclaration(ctx) {
     this.package = ctx.Identifier.map(ident => ident.image)
@@ -289,15 +299,7 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
       
       const object = new ClassObject(name)
       object.isAbstract = this.hasModifier(ctx.classModifier, "Abstract")
-      
-      if (decl.typeParameters) {
-        const typeParameters = decl.typeParameters[0].children
-          .typeParameterList[0].children
-          .typeParameter
-        typeParameters
-          .map(param => this.parseType(param))
-          .forEach(type => object.addGeneric(type))
-      }
+      this.parseTypeParameters(object, decl.typeParameters)
       
       this.parseClassBody(body || [], object)
       
@@ -334,6 +336,8 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
       const name = decl.typeIdentifier[0].children.Identifier[0].image
       
       const object = new InterfaceObject(name)
+      this.parseTypeParameters(object, decl.typeParameters)
+      
       for (const node of decl.interfaceBody[0].children.interfaceMemberDeclaration || []) {
         const kind = Object.keys(node.children)[0]
         const child = node.children[kind][0]
