@@ -106,7 +106,7 @@ class GraphQlVisitor {
   
   inputTypeDef(definition) {
     const object = this.objectTypeDef(definition)
-    object.package.push("inputs")
+    object.package = [...object.package, ...this.config.inputsPackage]
   }
   
   interfaceTypeDef(definition) {
@@ -138,7 +138,8 @@ const DEFAULT_CONFIG = {
   basePackage: [],
   idType: "long",
   ignore: new Set(["Query", "Mutation", "Subscription"]),
-  sourceTypes: false
+  sourceTypes: false,
+  inputsPackage: ["inputs"]
 }
 
 function loadGraphQL(schemaPath, diagram, config) {
@@ -167,7 +168,8 @@ Diagram.fromGraphQLProject = function(basePath, partialConfig) {
   
   const diagram = new Diagram()
   walkTree(basePath, filePath => {
-    if (path.parse(filePath).ext == ".graphql") {
+    const ext = path.parse(filePath).ext
+    if (ext == ".graphql" || ext == ".graphqls") {
       loadGraphQL(filePath, diagram, config)
     }
   })

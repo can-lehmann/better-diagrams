@@ -63,6 +63,10 @@ export class Diagram {
   view(object) {
     return new View([object], this)
   }
+  
+  viewMultiple(objects) {
+    return new View(objects, this)
+  }
 }
 
 export class DiagramObject {

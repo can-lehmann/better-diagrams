@@ -26,6 +26,16 @@ export class View {
     return this
   }
   
+  show(object) {
+    this.objects.add(object)
+    return this
+  }
+  
+  hide(object) {
+    this.objects.delete(object)
+    return this
+  }
+  
   planRender() {
     let rendered = []
     for (const object of this.objects) {
