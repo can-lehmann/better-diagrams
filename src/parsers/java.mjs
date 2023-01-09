@@ -363,7 +363,7 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
           const name = type.children.classType[0].children.Identifier[0].image
           this.diagram.addRelation(new InheritanceRelation(
             object,
-            new UnresolvedObject(name)
+            this.createUnresolvedObject(name)
           ))
         })
       }
