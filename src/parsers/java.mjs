@@ -37,6 +37,15 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
     this.diagram = diagram
     this.config = config
     this.package = null
+    this.imports = new Map()
+  }
+  
+  createUnresolvedObject(name) {
+    const object = new UnresolvedObject(name)
+    if (this.imports.has(name)) {
+      object.package = [...this.imports.get(name)]
+    }
+    return object
   }
   
   hasModifier(modifiers, modifier) {
@@ -231,12 +240,23 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
     this.package = ctx.Identifier.map(ident => ident.image)
   }
   
+  importDeclaration(ctx) {
+    if (!ctx.Star) {
+      const idents = ctx.packageOrTypeName[0].children
+        .Identifier
+        .map(ident => ident.image)
+      
+      const name = idents[idents.length - 1]
+      const pkg = idents.slice(0, idents.length - 1)
+      this.imports.set(name, pkg)
+    }
+  }
+  
   classDeclaration(ctx) {
     if (this.hasModifier(ctx.classModifier || [], "Public")) {
       if (ctx.enumDeclaration) {
         const decl = ctx.enumDeclaration[0].children
         const name = decl.typeIdentifier[0].children.Identifier[0].image
-        
         
         const object = new EnumObject(name)
         
@@ -291,7 +311,7 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
         const typeName = type.children.Identifier[0].image
         this.diagram.addRelation(new InheritanceRelation(
           object,
-          new UnresolvedObject(typeName)
+          this.createUnresolvedObject(typeName)
         ))
       }
       
@@ -301,7 +321,7 @@ class Visitor extends BaseJavaCstVisitorWithDefaults {
           const typeName = type.children.classType[0].children.Identifier[0].image
           this.diagram.addRelation(new ImplementsRelation(
             object,
-            new UnresolvedObject(typeName)
+            this.createUnresolvedObject(typeName)
           ))
         }
       }

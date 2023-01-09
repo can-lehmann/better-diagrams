@@ -46,12 +46,12 @@ export function buildPackageTree(diagram) {
 
 export function resolveObjects(diagram) {
   for (const relation of diagram.relations) {
-    relation.resolve(name => {
-      if (!diagram.hasObject(name)) {
-        console.warn(`Unable to resolve object ${name}`)
-        return new UnresolvedObject(name)
+    relation.resolve(object => {
+      if (!diagram.hasObject(object.name)) {
+        console.warn(`Unable to resolve object ${object.name}`)
+        return object
       }
-      return diagram.getObject(name)
+      return diagram.getObject(object.name)
     })
   }
 }

@@ -370,10 +370,10 @@ export class Relation {
   
   resolve(lookup) {
     if (this.a instanceof UnresolvedObject) {
-      this.a = lookup(this.a.name)
+      this.a = lookup(this.a)
     }
     if (this.b instanceof UnresolvedObject) {
-      this.b = lookup(this.b.name)
+      this.b = lookup(this.b)
     }
   }
 }
