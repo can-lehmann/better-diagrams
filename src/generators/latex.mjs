@@ -20,13 +20,14 @@ import {
   DiagramObject,
   ClassObject, EnumObject, InterfaceObject,
   ClassMember, Constant, Attribute, Method, Constructor, Argument,
-  DocComment, ImplementsRelation, InheritanceRelation
+  DocComment, ImplementsRelation, InheritanceRelation,
+  UnresolvedObject
 } from "./../model.mjs"
 
 
 /*
-*   === LaTex Helper
-*/
+ *   === LaTex Helper
+ */
 
 function text(...strings) {
   strings = strings.map((string) => string.toString())
@@ -43,20 +44,31 @@ function texttt(...text) {
   return `\\texttt{${text.join("")}}`
 }
 
-function subsection(title, starred = false, tocTitle = null) {
-  const cmd = starred ? "\\subsection*" : "\\subsection"
-  if (tocTitle) {
-    return `${cmd}[${tocTitle}]{${title}}`
+function subsubsection(title, starred = false, tocTitle = null) {
+  let command = "\\subsubsection"
+  if (starred) {
+    command += "*"
   }
-  return `${cmd}{${title}}`
+  if (tocTitle) {
+    return `${command}[${tocTitle}]{${title}}`
+  }
+  return `${command}{${title}}`
 }
 
-function subsectionmark(mark) {
-  return `\\subsectionmark{${mark}}`
+function subsubsectionmark(mark) {
+  return `\\subsubsectionmark{${mark}}`
 }
 
 function ref(ref) {
   return `\\ref{${ref}}`
+}
+
+function nameref(ref) {
+  return `\\nameref{${ref}}`
+}
+
+function label(name) {
+  return `\\label{${name}}`
 }
 
 function index(text, indexName = null) {
@@ -94,19 +106,17 @@ function enumerate(items, options = "") {
 // ====
 
 String.prototype.encodeLaTeX = function() {
-  return this.split("_").join("\\_")
+  return this
+    .split("_").join("\\_")
+    .split("#").join("\\#")
 }
 
 ClassMember.prototype.toLaTeX = function() {
-  return texttt(
-    textbf(
-      this.name.encodeLaTeX()
-    )
-  )
+  return texttt(this.name.encodeLaTeX())
 }
 
 Constant.prototype.toLaTeX = function() {
-  const lines = [texttt(textbf(this.name.encodeLaTeX()))]
+  const lines = [texttt(this.name.encodeLaTeX())]
   if (this.doc.content.length > 0) {
     lines.push("\\\\")
     lines.push(this.doc.toLaTeX())
@@ -129,9 +139,9 @@ DocComment.prototype.toLaTeX = function() {
 }
 
 Attribute.prototype.toLaTeX = function() {
-  const lines = [texttt(textbf(
-    `${this.visibility} ${this.stereotypePrefix}${this.name}: ${this.type.toString()}`
-  ))]
+  const lines = [texttt(
+    `${this.visibility} ${this.stereotypePrefix}${this.name}: ${this.type.toString()}`.encodeLaTeX()
+  )]
   if (this.doc.content.length > 0) {
     lines.push("\\\\")
     lines.push(this.doc.toLaTeX())
@@ -149,7 +159,7 @@ Method.prototype.toLaTeX = function() {
   const prefix = `${this.visibility} ${this.stereotypePrefix}`
   const signature = `${this.name}(${args.join(", ")}): ${this.result.toString()}`
   
-  const lines = [texttt(textbf(prefix + signature))]
+  const lines = [texttt((prefix + signature).encodeLaTeX())]
   if (this.doc.content.length > 0) {
     lines.push("\\\\")
     lines.push(this.doc.toLaTeX())
@@ -161,7 +171,9 @@ Method.prototype.toLaTeX = function() {
 Constructor.prototype.toLaTeX = function() {
   const args = this.args.map(arg => arg.toLaTeX())
   
-  const lines = [texttt(textbf(`${this.visibility} ${this.stereotypePrefix}${this.name}(${args.join(", ")})`))]
+  const lines = [texttt(
+    `${this.visibility} ${this.stereotypePrefix}${this.name}(${args.join(", ")})`.encodeLaTeX()
+  )]
   if (this.doc.content.length > 0) {
     lines.push("\\\\")
     lines.push(this.doc.toLaTeX())
@@ -176,44 +188,61 @@ function membersToLaTeX(name, members) {
     return ""
   }
 
-  return subsectionmark(name)
+  return subsubsectionmark(name)
     + "\n"
-    +  subsection(name, true)
+    +  subsubsection(name, true)
     + "\n"
     + itemize(members.map((member) => ` ${member.toLaTeX()}`), "label=,leftmargin=0pt")
     + "\n"
 }
 
+function relationsToLaTeX(name, relations) {
+  let result = ""
+  if (relations && relations.length) {
+    result += "\\hfill\\break\\noindent" + textbf(`${name}: `)
+    result += relations
+      .map(relation => {
+        if (relation.b instanceof UnresolvedObject) {
+          let name = [...relation.b.package, relation.b.name].join(".")
+          return texttt(name.encodeLaTeX())
+        }
+        return texttt(nameref("diagramObject:" + relation.b.name))
+      })
+      .join(", ") + "\n"
+  }
+  return result
+}
+
 DiagramObject.prototype.toLaTeX = function(config) {
   const packageName = this.package.removeCommonPrefix(config.packagePrefix).join(".")
 
-  return  subsectionmark(this.name)
-    + "\n"
-    + (config.createIndex ? index(this.name, "classes") + "\n" : "")
-    + subsection(
-      text(
-        texttt(textbf(this.nameWithGenerics)),
-        "\\hfill",
-        texttt(textbf(
-          config.useFaIcons ? `\\faIcon{folder} ${packageName}` : packageName
-        )),
-        `\n`
-      ), false, this.name
-    )
-    + "\n"
-    + `${this.doc.toLaTeX()}`
-    + "\n"
-}
-
-ClassObject.prototype.toLaTeX = function(config) {
-  let section = DiagramObject.prototype.toLaTeX.bind(this)(config)
-  section += membersToLaTeX(config.translations.attributes, this.attributes)
-  section += membersToLaTeX(config.translations.methods, [...this.constructors, ...this.methods])
-
-  // inheritance
+  let stereotypes = ""
+  if (this.stereotypes.length > 0) {
+    stereotypes = ("«" + this.stereotypes.join(", ") + "» ").encodeLaTeX()
+  }
+  
+  let result = subsubsectionmark(this.name) + "\n"
+  if (config.createIndex) {
+    result += index(this.name, "classes") + "\n"
+  }
+  result += subsubsection(
+    text(
+      stereotypes,
+      texttt(textbf(this.nameWithGenerics)),
+      "\\hfill",
+      texttt(textbf(
+        config.useFaIcons ? `\\faIcon{folder} ${packageName}` : packageName
+      )),
+      `\n`
+    ), false, this.name
+  ) + label("diagramObject:" + this.name) + "\n"
+  
+  result += this.doc.toLaTeX() + "\n"
+  
+  // Relations
   const inheritanceRelations = []
   const implementsRelations = []
-  for (const relation of config.relations.get(this) ||  []) {
+  for (const relation of config.relations.get(this) || []) {
     if (relation instanceof InheritanceRelation) {
       inheritanceRelations.push(relation)
     } else if (relation instanceof ImplementsRelation) {
@@ -221,13 +250,16 @@ ClassObject.prototype.toLaTeX = function(config) {
     }
   }
 
-  if (inheritanceRelations && inheritanceRelations.length) {
-    section += textbf(`${config.translations.extends}: `) + inheritanceRelations.map((relation) => texttt(ref(relation.b.name))).join(", ") + "\\\\"
-  }
+  result += relationsToLaTeX(config.translations.extends, inheritanceRelations)
+  result += relationsToLaTeX(config.translations.implements, implementsRelations)
 
-  if (implementsRelations && implementsRelations.length) {
-    section += textbf(`${config.translations.implements}: `) + implementsRelations.map((relation) => texttt(ref(relation.b.name))).join(", ") + "\\\\"
-  }
+  return result
+}
+
+ClassObject.prototype.toLaTeX = function(config) {
+  let section = DiagramObject.prototype.toLaTeX.bind(this)(config)
+  section += membersToLaTeX(config.translations.attributes, this.attributes)
+  section += membersToLaTeX(config.translations.methods, [...this.constructors, ...this.methods])
 
   return section
 }
@@ -235,12 +267,6 @@ ClassObject.prototype.toLaTeX = function(config) {
 InterfaceObject.prototype.toLaTeX = function(config) {
   let section = DiagramObject.prototype.toLaTeX.bind(this)(config)
   section += membersToLaTeX(config.translations.methods, this.methods)
-
-  const relations = config.relations.get(this) || []
-
-  if (relations && relations.length) {
-    section += textbf(`${config.translations.extends}: `) + relations.map((relation) => texttt(ref(relation.name))).join(", ") + "\n"
-  }
 
   return section
 }
@@ -272,7 +298,7 @@ View.prototype.toLaTeX = function(partialConfig) {
   const relations = new Map()
   for (const relation of this.diagram.relations) {
     const oldMapping = relations.get(relation.a) || []
-    relations.set(relation.a, oldMapping.concat([relation.b]))
+    relations.set(relation.a, oldMapping.concat([relation]))
   }
 
   const config = Object.assign({...DEFAULT_CONFIG, relations}, partialConfig || {})
