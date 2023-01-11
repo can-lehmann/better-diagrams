@@ -96,10 +96,17 @@ AssociativeRelation.prototype.toGraphViz = function() {
   ];`
 }
 
-View.prototype.toGraphViz = function(dpi=72) {
+const DEFAULT_CONFIG = {
+  dpi: 72,
+  rankdir: "BT"
+}
+
+View.prototype.toGraphViz = function(partialConfig) {
+  const config = Object.assign({...DEFAULT_CONFIG}, partialConfig || {})
+  
   let output = "digraph {\n"
-  output += "rankdir=BT;\n"
-  output += `dpi=${dpi};` + "\n"
+  output += `rankdir=${config.rankdir};\n`
+  output += `dpi=${config.dpi};` + "\n"
   
   const {objects, adjacent, relations} = this.planRender()
   
@@ -118,7 +125,7 @@ View.prototype.toGraphViz = function(dpi=72) {
   return output
 }
 
-View.prototype.saveGraphViz = function(filePath, dpi=72) {
-  writeFileSync(filePath, this.toGraphViz(dpi))
+View.prototype.saveGraphViz = function(filePath, partialConfig) {
+  writeFileSync(filePath, this.toGraphViz(partialConfig))
 }
 
