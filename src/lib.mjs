@@ -28,7 +28,7 @@
 
 import {Diagram} from "./model.mjs"
 import {View} from "./rendering.mjs"
-import {buildPackageTree, inferAssociations, addGetters} from "./passes.mjs"
+import {buildPackageTree, inferAssociations, markImportant, addGetters} from "./passes.mjs"
 
 import "./parsers/java.mjs"
 import "./parsers/graphql.mjs"
@@ -37,5 +37,5 @@ import "./generators/graphviz.mjs"
 import "./generators/latex.mjs"
 import "./generators/java.mjs"
 
-export { Diagram, View, buildPackageTree, inferAssociations, addGetters }
+export { Diagram, View, buildPackageTree, inferAssociations, markImportant, addGetters }
 

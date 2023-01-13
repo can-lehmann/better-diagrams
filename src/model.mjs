@@ -96,12 +96,31 @@ export class DiagramObject {
   fuse(other) {
   }
   
-  toBlockSections() {
+  collectObjects() {
+    return new Set([this])
+  }
+  
+  get memberBlocks() {
     return []
   }
   
-  collectObjects() {
-    return new Set([this])
+  get members() {
+    return this.memberBlocks.flatMap(block => block)
+  }
+  
+  toBlockSections(onlyImportant=false) {
+    return this.memberBlocks
+      .map(block => {
+        const shown = block
+          .filter(member => member.important || !onlyImportant)
+          .map(member => member.toHtml())
+        if (shown.length < block.length && shown.length > 0) {
+          shown.push("...")
+        }
+        return shown
+      })
+      .filter(block => block.length > 0 || !onlyImportant)
+      .map(block => new BlockSection("left", block))
   }
 }
 
@@ -146,12 +165,10 @@ export class ClassObject extends DiagramObject {
     this.constructors.push(constr)
   }
   
-  toBlockSections() {
-    const attributes = this.attributes.map(attr => attr.toHtml())
-    const methods = [...this.constructors, ...this.methods].map(method => method.toHtml())
+  get memberBlocks() {
     return [
-      new BlockSection("left", attributes),
-      new BlockSection("left", methods)
+      this.attributes,
+      [...this.constructors, ...this.methods]
     ]
   }
 }
@@ -173,10 +190,11 @@ export class EnumObject extends ClassObject {
     this.constants.push(constant)
   }
   
-  toBlockSections() {
-    const sections = super.toBlockSections()
-    sections.splice(0, 0, new BlockSection("left", this.constants.map(constant => constant.name.escapeHtml())))
-    return sections
+  get memberBlocks() {
+    return [
+      this.constants,
+      ...super.memberBlocks
+    ]
   }
 }
 
@@ -197,9 +215,8 @@ export class InterfaceObject extends DiagramObject {
     this.methods.push(method)
   }
   
-  toBlockSections() {
-    const methods = this.methods.map(method => method.toHtml())
-    return [new BlockSection("left", methods)]
+  get memberBlocks() {
+    return [this.methods]
   }
 }
 
@@ -245,6 +262,17 @@ export class PackageObject extends DiagramObject {
     }
     return objects
   }
+  
+  filter(predicate) {
+    const result = new PackageObject(this.name)
+    result.package = [...this.package]
+    for (const [name, object] of this.objects.entries()) {
+      if (predicate(object)) {
+        result.addObject(object)
+      }
+    }
+    return result
+  }
 }
 
 export class ClassMember {
@@ -254,6 +282,7 @@ export class ClassMember {
     this.isStatic = false
     this.customStereotypes = []
     this.doc = new DocComment()
+    this.important = false
   }
   
   get stereotypes() {
@@ -347,13 +376,17 @@ export class Argument {
   }
   
   toHtml() {
-    return this.name + ":  " + this.type.toString().escapeHtml()
+    return this.name.escapeHtml() + ":  " + this.type.toString().escapeHtml()
   }
 }
 
 export class Constant extends ClassMember {
   constructor(name) {
     super("", name)
+  }
+  
+  toHtml() {
+    return this.name.escapeHtml()
   }
 }
 

@@ -24,27 +24,33 @@ import {
   InheritanceRelation, ImplementsRelation, AssociativeRelation
 } from "./../model.mjs"
 
-DiagramObject.prototype.toGraphViz = function(isExternal=false) {
+DiagramObject.prototype.toGraphViz = function(config, isExternal=false) {
   const header = new BlockSection("center", [])
   if (this.stereotypes.length > 0) {
     header.addLine("«" + this.stereotypes.join(", ") + "»")
   }
-  header.addLine(this.nameWithGenerics.escapeHtml())
+  
+  let name = this.nameWithGenerics.escapeHtml()
+  if (config.nameFontSize != null) {
+    name = `<font point-size="${config.nameFontSize}">${name}</font>`
+  }
+  header.addLine(name)
+  
   const block = new BlockNode([header])
   if (isExternal) {
     header.addLine(`(from ${this.package.join(".")})`)
-  } else {
-    block.addSections(this.toBlockSections())
+  } else if (!config.hideMembers) {
+    block.addSections(this.toBlockSections(config.onlyImportant))
   }
   
   const label = block.toHtmlTable()
   return `${this.name.escapeGraphViz()} [shape=none, label=<${label}>];\n`
 }
 
-PackageObject.prototype.toGraphViz = function(external=false) {
+PackageObject.prototype.toGraphViz = function(config, external=false) {
   const objects = []
   for (const [name, object] of this.objects.entries()) {
-    objects.push(object.toGraphViz())
+    objects.push(object.toGraphViz(config))
   }
   return `subgraph {
     cluster=true;
@@ -98,7 +104,10 @@ AssociativeRelation.prototype.toGraphViz = function() {
 
 const DEFAULT_CONFIG = {
   dpi: 72,
-  rankdir: "BT"
+  rankdir: "BT",
+  onlyImportant: false,
+  hideMembers: false,
+  nameFontSize: 0
 }
 
 View.prototype.toGraphViz = function(partialConfig) {
@@ -111,10 +120,10 @@ View.prototype.toGraphViz = function(partialConfig) {
   const {objects, adjacent, relations} = this.planRender()
   
   for (const object of objects) {
-    output += object.toGraphViz()
+    output += object.toGraphViz(config)
   }
   for (const object of adjacent) {
-    output += object.toGraphViz(true)
+    output += object.toGraphViz(config, true)
   }
   
   for (const relation of relations) {

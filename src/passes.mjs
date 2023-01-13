@@ -95,7 +95,14 @@ function parseAssociation(object, diagram, attr) {
   return relation
 }
 
-export function inferAssociations(diagram) {
+const DEFAULT_INFER_ASSOCIATIONS_CONFIG = {
+  merge: false,
+  maxRoles: -1
+}
+
+export function inferAssociations(diagram, partialConfig) {
+  const config = Object.assign({...DEFAULT_INFER_ASSOCIATIONS_CONFIG}, partialConfig || {})
+  
   for (const [name, object] of diagram.objects.entries()) {
     const attr = object.doc.findAttribute("@assoc")
     if (attr) {
@@ -107,6 +114,7 @@ export function inferAssociations(diagram) {
     }
     
     if (object instanceof ClassObject) {
+      const inferred = new Map()
       for (const attribute of object.attributes) {
         const attr = attribute.doc.findAttribute("@assoc")
         if (attr) {
@@ -115,17 +123,43 @@ export function inferAssociations(diagram) {
           const refs = attribute.type.collectNames()
           for (const ref of refs) {
             if (diagram.hasObject(ref)) {
-              const relation = new AssociativeRelation(
-                object,
-                diagram.getObject(ref)
-              )
-              relation.roleB = attribute.name
-              diagram.addRelation(relation)
+              const refObject = diagram.getObject(ref)
+              if (!inferred.has(refObject)) {
+                inferred.set(refObject, [])
+              }
+              inferred.get(refObject).push(attribute.name)
             }
           }
         }
       }
+      
+      
+      for (const [refObject, roles] of inferred) {
+        if (config.merge) {
+          const relation = new AssociativeRelation(object, refObject)
+          if (config.maxRoles == -1 || roles.length <= config.maxRoles) {
+            relation.roleB = roles.join(", ")
+          }
+          diagram.addRelation(relation)
+        } else {
+          for (const role of roles) {
+            const relation = new AssociativeRelation(object, refObject)
+            relation.roleB = role
+            diagram.addRelation(relation)
+          }
+        }
+      }
     }
+  }
+}
+
+export function markImportant(diagram) {
+  for (const [name, object] of diagram.objects.entries()) {
+    object.members.forEach(member => {
+      if (member.doc.findAttribute("@important")) {
+        member.important = true
+      }
+    })
   }
 }
 
