@@ -107,7 +107,7 @@ const DEFAULT_CONFIG = {
   rankdir: "BT",
   onlyImportant: false,
   hideMembers: false,
-  nameFontSize: 0
+  nameFontSize: null
 }
 
 View.prototype.toGraphViz = function(partialConfig) {
